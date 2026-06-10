@@ -1,4 +1,10 @@
-export function Logo({ className }: { className?: string }) {
+export function Logo({
+  className,
+  dark = false,
+}: {
+  className?: string;
+  dark?: boolean;
+}) {
   return (
     <svg
       viewBox="0 0 40 40"
@@ -11,7 +17,7 @@ export function Logo({ className }: { className?: string }) {
       {/* D */}
       <path
         d="M21 7 H27 A13 13 0 0 1 27 32 H21 V25 H26 A6 6 0 0 0 26 14 H21 Z"
-        fill="var(--color-ink)"
+        fill={dark ? "#ffffff" : "var(--color-ink)"}
       />
     </svg>
   );
