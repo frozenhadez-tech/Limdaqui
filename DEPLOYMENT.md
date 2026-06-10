@@ -41,8 +41,33 @@ The backend ships as a container (`backend/Dockerfile`). Cloud Run injects
 ```bash
 gcloud auth login
 gcloud config set project YOUR_PROJECT_ID
-gcloud services enable run.googleapis.com cloudbuild.googleapis.com
+gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com
 ```
+
+### Grant build + runtime permissions to the default service account
+
+Deploying from source runs Cloud Build as the **Compute Engine default
+service account** (`PROJECT_NUMBER-compute@developer.gserviceaccount.com`).
+On a new project it lacks the build role, which causes:
+
+> `PERMISSION_DENIED: Build failed because the default service account is
+> missing required IAM permissions.`
+
+Grant it the builder role (and secret access, since the runtime service also
+uses this account):
+
+```bash
+PROJECT_ID=YOUR_PROJECT_ID
+PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')
+SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --member="serviceAccount:${SA}" --role="roles/cloudbuild.builds.builder"
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --member="serviceAccount:${SA}" --role="roles/secretmanager.secretAccessor"
+```
+
+Wait ~60 seconds for IAM changes to propagate before deploying.
 
 ### Store the DB connection string as a secret (recommended)
 
