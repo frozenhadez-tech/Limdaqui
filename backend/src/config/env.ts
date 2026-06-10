@@ -15,6 +15,7 @@ export const env = {
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean),
+  databaseUrl: required("DATABASE_URL"),
 } as const;
 
 export const isProduction = env.nodeEnv === "production";
