@@ -52,3 +52,74 @@ body {
 .delay-4 {
   animation-delay: 0.32s;
 }
+
+/* ---- Animated hero background ---- */
+
+/* Background photo: fade in once, then drift with a slow Ken Burns zoom */
+@keyframes hero-image-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.18;
+  }
+}
+@keyframes kenburns {
+  from {
+    transform: scale(1.08) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.2) translate3d(-1.5%, -2%, 0);
+  }
+}
+.hero-image {
+  opacity: 0;
+  animation:
+    hero-image-in 1.6s ease-out forwards,
+    kenburns 28s ease-in-out 1.6s infinite alternate;
+}
+
+/* Ambient glow blobs that slowly drift and breathe */
+@keyframes drift-a {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.45;
+  }
+  50% {
+    transform: translate3d(50px, -36px, 0) scale(1.18);
+    opacity: 0.75;
+  }
+}
+@keyframes drift-b {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.1);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translate3d(-44px, 34px, 0) scale(0.95);
+    opacity: 0.6;
+  }
+}
+.blob-a {
+  animation: drift-a 17s ease-in-out infinite;
+}
+.blob-b {
+  animation: drift-b 21s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up {
+    animation: none;
+    opacity: 1;
+  }
+  .hero-image {
+    animation: none;
+    opacity: 0.18;
+  }
+  .blob-a,
+  .blob-b {
+    animation: none;
+  }
+}

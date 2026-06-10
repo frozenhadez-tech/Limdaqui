@@ -123,15 +123,28 @@ export default function Home() {
   return (
     <>
       {/* Hero */}
-      <section className="relative isolate overflow-hidden bg-ink">
-        <div className="absolute inset-0 -z-10 bg-ink" />
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(70%_55%_at_50%_-5%,rgba(226,35,26,0.20),transparent_65%)]" />
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(45%_45%_at_85%_15%,rgba(24,35,58,0.9),transparent_70%)]" />
-        <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_bottom,rgba(11,17,31,0.25),rgba(11,17,31,0.96))]" />
+      <section className="relative isolate min-h-[calc(100vh-5rem)] overflow-hidden bg-ink">
+        {/* base gradient */}
+        <div className="absolute inset-0 -z-30 bg-gradient-to-br from-[#0b1120] via-[#0e1830] to-black" />
+        {/* medical photo: fades in once, then a slow continuous Ken Burns zoom */}
+        <div
+          className="hero-image absolute inset-0 -z-20 bg-cover bg-center mix-blend-overlay"
+          style={{
+            backgroundImage:
+              "url('https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1920&q=80')",
+          }}
+        />
+        {/* legibility darkening over the photo */}
+        <div className="absolute inset-0 -z-20 bg-[linear-gradient(to_bottom,rgba(11,17,31,0.35),rgba(11,17,31,0.92))]" />
+        {/* drifting, breathing glow blobs */}
+        <div className="blob-a absolute -bottom-32 -left-32 -z-10 h-[36rem] w-[36rem] rounded-full bg-brand/25 blur-3xl" />
+        <div className="blob-b absolute -right-24 -top-24 -z-10 h-[32rem] w-[32rem] rounded-full bg-[#274690]/30 blur-3xl" />
+        {/* top red wash */}
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(60%_50%_at_50%_-5%,rgba(226,35,26,0.16),transparent_65%)]" />
 
         <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-5xl flex-col items-center justify-center px-6 py-24 text-center">
           <span className="animate-fade-up inline-flex items-center gap-2.5 rounded-full border border-brand/40 bg-brand/10 px-4 py-1.5 text-sm font-semibold text-red-200">
-            <span className="h-2 w-2 rounded-full bg-brand" />
+            <span className="h-2 w-2 animate-pulse rounded-full bg-brand" />
             Trusted Medical Trading Partner in the Philippines
           </span>
 
