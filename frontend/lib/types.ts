@@ -20,6 +20,24 @@ export type Product = {
   createdAt: string;
 };
 
+export type OrderItem = {
+  orderId: string;
+  productId: string;
+  quantity: number;
+  unitPriceCents: number;
+  name: string | null;
+  imageUrl: string | null;
+};
+
+export type Order = {
+  id: string;
+  status: "pending" | "paid" | "shipped" | "delivered" | "cancelled";
+  totalCents: number;
+  currency: string;
+  createdAt: string;
+  items: OrderItem[];
+};
+
 export type Quote = {
   id: string;
   name: string;

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { AddToCartButton } from "@/components/AddToCartButton";
 import { API_URL } from "@/lib/api";
 import { formatPrice, type Product } from "@/lib/types";
 
@@ -80,6 +81,12 @@ export default async function ProductsPage() {
                   >
                     {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
                   </span>
+                </div>
+                <div className="mt-3 flex justify-end">
+                  <AddToCartButton
+                    productId={product.id}
+                    disabled={product.stock === 0}
+                  />
                 </div>
               </div>
             </li>

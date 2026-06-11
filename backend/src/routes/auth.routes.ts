@@ -121,4 +121,57 @@ router.get("/me", requireAuth, async (req: AuthedRequest, res, next) => {
   }
 });
 
+const updateMeSchema = z.object({
+  fullName: z.string().min(1).max(255).nullable(),
+});
+
+// PATCH /api/auth/me — update profile details
+router.patch("/me", requireAuth, async (req: AuthedRequest, res, next) => {
+  try {
+    const data = updateMeSchema.parse(req.body);
+    const [row] = await db
+      .update(users)
+      .set({ fullName: data.fullName, updatedAt: new Date() })
+      .where(eq(users.id, req.user!.sub))
+      .returning();
+    if (!row) throw new HttpError(404, "User not found");
+    res.json({ user: toPublicUser(row) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1).max(200),
+  newPassword: z.string().min(8).max(200),
+});
+
+// POST /api/auth/password — change password (requires current password)
+router.post(
+  "/password",
+  requireAuth,
+  async (req: AuthedRequest, res, next) => {
+    try {
+      const data = changePasswordSchema.parse(req.body);
+      const [row] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, req.user!.sub));
+      if (!row) throw new HttpError(404, "User not found");
+
+      const ok = await verifyPassword(data.currentPassword, row.passwordHash);
+      if (!ok) throw new HttpError(401, "Current password is incorrect");
+
+      const passwordHash = await hashPassword(data.newPassword);
+      await db
+        .update(users)
+        .set({ passwordHash, updatedAt: new Date() })
+        .where(eq(users.id, row.id));
+      res.json({ ok: true });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 export default router;

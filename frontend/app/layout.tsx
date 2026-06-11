@@ -3,6 +3,7 @@ import { Archivo, Manrope } from "next/font/google";
 
 import { SiteChrome } from "@/components/SiteChrome";
 import { AuthProvider } from "@/lib/auth";
+import { CartProvider } from "@/lib/cart";
 
 import "./globals.css";
 
@@ -30,7 +31,9 @@ export default function RootLayout({
     <html lang="en" className={`${archivo.variable} ${manrope.variable}`}>
       <body>
         <AuthProvider>
-          <SiteChrome>{children}</SiteChrome>
+          <CartProvider>
+            <SiteChrome>{children}</SiteChrome>
+          </CartProvider>
         </AuthProvider>
       </body>
     </html>
