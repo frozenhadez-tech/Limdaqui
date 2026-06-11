@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import {
+  customType,
   integer,
   pgEnum,
   pgTable,
@@ -9,6 +10,12 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
+
+const bytea = customType<{ data: Buffer }>({
+  dataType() {
+    return "bytea";
+  },
+});
 
 // ---------------------------------------------------------------------------
 // Enums
@@ -82,6 +89,15 @@ export const quotes = pgTable("quotes", {
   company: varchar("company", { length: 255 }),
   phone: varchar("phone", { length: 60 }),
   message: text("message").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Uploaded product images, served via GET /api/images/:id. Stored in the DB
+// because Cloud Run instances have no persistent filesystem.
+export const productImages = pgTable("product_images", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  mimeType: varchar("mime_type", { length: 100 }).notNull(),
+  data: bytea("data").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

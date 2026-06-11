@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-import { apiFetch } from "@/lib/api";
+import { API_URL, apiFetch, resolveImageUrl } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { formatPrice, type Category, type Product } from "@/lib/types";
 import { useAuthedFetch } from "@/lib/useAuthedFetch";
 
@@ -76,6 +77,9 @@ function StockPill({ stock }: { stock: number }) {
 
 export default function AdminProductsPage() {
   const authedFetch = useAuthedFetch();
+  const { token } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
   const [products, setProducts] = useState<Product[] | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -159,6 +163,31 @@ export default function AdminProductsPage() {
     }
   }
 
+  async function uploadImage(file: File) {
+    setFormError(null);
+    setUploading(true);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      // Raw fetch: multipart needs the browser to set its own Content-Type.
+      const res = await fetch(`${API_URL}/api/images`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.error || `Upload failed (${res.status})`);
+      }
+      update("imageUrl", data.url as string);
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
   async function remove() {
     if (editing === "new" || !editing) return;
     setSaving(true);
@@ -233,7 +262,7 @@ export default function AdminProductsPage() {
                       {p.imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={p.imageUrl}
+                          src={resolveImageUrl(p.imageUrl)!}
                           alt=""
                           className="h-10 w-10 shrink-0 rounded-lg object-cover"
                         />
@@ -385,23 +414,65 @@ export default function AdminProductsPage() {
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                  Image URL
+                  Image
                 </label>
-                <div className="flex items-center gap-3">
-                  <input
-                    value={form.imageUrl}
-                    onChange={(e) => update("imageUrl", e.target.value)}
-                    className={field}
-                    placeholder="https://…"
-                  />
-                  {form.imageUrl && (
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) uploadImage(file);
+                  }}
+                />
+                <div className="flex items-center gap-4">
+                  {form.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={form.imageUrl}
-                      alt=""
-                      className="h-10 w-10 shrink-0 rounded-lg object-cover"
+                      src={resolveImageUrl(form.imageUrl)!}
+                      alt="Product image preview"
+                      className="h-20 w-20 shrink-0 rounded-xl border border-gray-100 object-cover"
                     />
+                  ) : (
+                    <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50 text-gray-300">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path
+                          d="M4 17l5-5 4 4 7-7M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Zm5 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </div>
                   )}
+                  <div className="space-y-1.5">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className="rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-brand hover:text-brand disabled:opacity-50"
+                    >
+                      {uploading
+                        ? "Uploading…"
+                        : form.imageUrl
+                          ? "Replace image"
+                          : "Upload image"}
+                    </button>
+                    {form.imageUrl && !uploading && (
+                      <button
+                        type="button"
+                        onClick={() => update("imageUrl", "")}
+                        className="block text-xs font-medium text-gray-400 transition hover:text-red-500"
+                      >
+                        Remove image
+                      </button>
+                    )}
+                    <p className="text-xs text-gray-400">
+                      JPEG, PNG, WebP, or GIF — up to 5 MB
+                    </p>
+                  </div>
                 </div>
               </div>
               <div>

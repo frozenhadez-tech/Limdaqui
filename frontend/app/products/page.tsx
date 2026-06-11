@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { AddToCartButton } from "@/components/AddToCartButton";
-import { API_URL } from "@/lib/api";
+import { API_URL, resolveImageUrl } from "@/lib/api";
 import { formatPrice, type Product } from "@/lib/types";
 
 // Revalidate the product list at most once per minute (ISR).
@@ -49,7 +49,7 @@ export default async function ProductsPage() {
               {product.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={product.imageUrl}
+                  src={resolveImageUrl(product.imageUrl)!}
                   alt={product.name}
                   className="aspect-square w-full object-cover"
                 />

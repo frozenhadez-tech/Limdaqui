@@ -38,7 +38,7 @@ a `title` tooltip and `aria-label`; menus close on Escape and outside-click.
 | `/login`, `/register` | `POST /api/auth/login`, `POST /api/auth/register` (rate-limited) | `users` |
 | `/quote` | `POST /api/quotes` (rate-limited) | `quotes` |
 | `/admin` | `GET /api/products`, `GET /api/categories`, `GET /api/quotes` | all |
-| `/admin/products` | products CRUD (admin) | `products` |
+| `/admin/products` | products CRUD (admin); `POST /api/images` for uploads, served via `GET /api/images/:id` | `products`, `product_images` |
 | `/admin/categories` | `GET/POST /api/categories` (POST admin) | `categories` |
 | `/admin/quotes` | `GET /api/quotes` (admin, paginated) | `quotes` |
 

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import Link from "next/link";
 
-import { apiFetch } from "@/lib/api";
+import { apiFetch, resolveImageUrl } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useCart } from "@/lib/cart";
 import { formatPrice, type Product } from "@/lib/types";
@@ -177,7 +177,7 @@ export default function CartPage() {
                   {r.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={r.imageUrl}
+                      src={resolveImageUrl(r.imageUrl)!}
                       alt={r.name}
                       className="h-16 w-16 shrink-0 rounded-xl object-cover"
                     />
