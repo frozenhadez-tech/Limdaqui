@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lt, sql } from "drizzle-orm";
 import { Router } from "express";
 import { z } from "zod";
 
@@ -117,10 +117,17 @@ router.get("/all", requireAuth, requireBackOffice, async (req, res, next) => {
   try {
     const query = z
       .object({
-        limit: z.coerce.number().int().min(1).max(200).default(100),
+        limit: z.coerce.number().int().min(1).max(500).default(100),
         offset: z.coerce.number().int().min(0).default(0),
+        // Optional period window for sales reports: createdAt in [from, to).
+        from: z.coerce.date().optional(),
+        to: z.coerce.date().optional(),
       })
       .parse(req.query);
+
+    const conditions = [];
+    if (query.from) conditions.push(gte(orders.createdAt, query.from));
+    if (query.to) conditions.push(lt(orders.createdAt, query.to));
 
     const rows = await db
       .select({
@@ -134,6 +141,7 @@ router.get("/all", requireAuth, requireBackOffice, async (req, res, next) => {
       })
       .from(orders)
       .leftJoin(users, eq(orders.userId, users.id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(desc(orders.createdAt))
       .limit(query.limit)
       .offset(query.offset);
