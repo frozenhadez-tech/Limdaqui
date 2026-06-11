@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Archivo, Manrope } from "next/font/google";
 
 import { SiteChrome } from "@/components/SiteChrome";
+import { VisitTracker } from "@/components/VisitTracker";
 import { AuthProvider } from "@/lib/auth";
 import { CartProvider } from "@/lib/cart";
 
@@ -32,6 +33,7 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           <CartProvider>
+            <VisitTracker />
             <SiteChrome>{children}</SiteChrome>
           </CartProvider>
         </AuthProvider>

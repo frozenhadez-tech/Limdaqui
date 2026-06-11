@@ -9,6 +9,7 @@ import productRoutes from "./products.routes.js";
 import quoteRoutes from "./quotes.routes.js";
 import settingsRoutes from "./settings.routes.js";
 import userRoutes from "./users.routes.js";
+import visitRoutes from "./visits.routes.js";
 
 const router = Router();
 
@@ -21,5 +22,6 @@ router.use("/products", productRoutes);
 router.use("/quotes", quoteRoutes);
 router.use("/settings", settingsRoutes);
 router.use("/users", userRoutes);
+router.use("/visits", visitRoutes);
 
 export default router;

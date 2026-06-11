@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -33,6 +33,13 @@ type SalesOrder = {
 };
 
 type PeriodType = "day" | "month" | "year";
+
+type VisitCounts = { views: number; visitors: number };
+type VisitStats = {
+  allTime: VisitCounts;
+  today: VisitCounts;
+  thisMonth: VisitCounts;
+};
 
 function escapeCell(v: string | number): string {
   const s = String(v);
@@ -75,6 +82,14 @@ export default function AdminReportsPage() {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
+
+  const [visitStats, setVisitStats] = useState<VisitStats | null>(null);
+
+  useEffect(() => {
+    authedFetch<VisitStats>("/api/visits/stats")
+      .then(setVisitStats)
+      .catch(() => {});
+  }, [authedFetch]);
 
   const [periodType, setPeriodType] = useState<PeriodType>("day");
   const [day, setDay] = useState(() => new Date().toISOString().slice(0, 10));
@@ -306,7 +321,44 @@ export default function AdminReportsPage() {
         </div>
       )}
 
-      <div className="animate-fade-up delay-2 mt-8 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+      <div className="animate-fade-up delay-1 mt-8 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-sm bg-brand" />
+          <h2 className="font-display text-base font-extrabold tracking-tight text-ink">
+            Site visitors
+          </h2>
+        </div>
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          {(
+            [
+              { key: "today", label: "Today" },
+              { key: "thisMonth", label: "This month" },
+              { key: "allTime", label: "All time" },
+            ] as const
+          ).map((p) => (
+            <div key={p.key} className="rounded-xl bg-gray-50 px-5 py-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                {p.label}
+              </p>
+              <p className="mt-1.5 font-display text-3xl font-extrabold tracking-tight text-ink">
+                {visitStats ? visitStats[p.key].visitors.toLocaleString() : "—"}
+              </p>
+              <p className="mt-0.5 text-xs text-gray-500">
+                unique visitors ·{" "}
+                {visitStats ? visitStats[p.key].views.toLocaleString() : "—"} page
+                views
+              </p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-gray-400">
+          Counted anonymously on the public store (back-office browsing is
+          excluded). Tracking starts from today — no historical data exists
+          before this feature.
+        </p>
+      </div>
+
+      <div className="animate-fade-up delay-2 mt-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 rounded-sm bg-brand" />
           <h2 className="font-display text-base font-extrabold tracking-tight text-ink">

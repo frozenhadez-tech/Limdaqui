@@ -110,6 +110,14 @@ export const quotes = pgTable("quotes", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// Public-site page views; visitorId is an anonymous client-generated UUID.
+export const visits = pgTable("visits", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  visitorId: varchar("visitor_id", { length: 64 }).notNull(),
+  path: varchar("path", { length: 255 }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 // Site-wide key/value settings (JSON values), e.g. payment instructions.
 export const settings = pgTable("settings", {
   key: varchar("key", { length: 120 }).primaryKey(),
