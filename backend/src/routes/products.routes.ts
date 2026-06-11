@@ -16,12 +16,13 @@ const productInput = z.object({
     .min(1)
     .max(280)
     .regex(/^[a-z0-9-]+$/, "slug must be lowercase letters, numbers, or hyphens"),
-  description: z.string().max(5000).optional(),
+  // Nullable so PATCH can clear these fields, not just change them.
+  description: z.string().max(5000).nullable().optional(),
   priceCents: z.number().int().nonnegative(),
   currency: z.string().length(3).optional(),
   stock: z.number().int().nonnegative().optional(),
-  imageUrl: z.string().url().max(2048).optional(),
-  categoryId: z.string().uuid().optional(),
+  imageUrl: z.string().url().max(2048).nullable().optional(),
+  categoryId: z.string().uuid().nullable().optional(),
 });
 
 const idParam = z.string().uuid("invalid product id");

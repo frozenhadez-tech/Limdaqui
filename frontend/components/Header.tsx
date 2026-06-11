@@ -74,6 +74,14 @@ export function Header() {
             <div className="h-9 w-24 animate-pulse rounded-full bg-gray-100" />
           ) : user ? (
             <div className="flex items-center gap-3">
+              {user.role === "admin" && (
+                <Link
+                  href="/admin"
+                  className="rounded-full border border-ink/15 px-4 py-2 text-sm font-bold text-ink transition-colors hover:border-ink hover:bg-ink hover:text-white"
+                >
+                  Admin
+                </Link>
+              )}
               <span className="hidden text-sm font-medium text-gray-700 sm:inline">
                 Hi, {user.fullName?.split(" ")[0] ?? user.email.split("@")[0]}
               </span>
