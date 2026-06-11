@@ -13,19 +13,10 @@ a `title` tooltip and `aria-label`; menus close on Escape and outside-click.
 | Shop | Package | `/products` | Everyone | Product catalog with add-to-cart |
 | Cart | Shopping cart + count badge | `/cart` | Everyone | Review cart, adjust quantities, checkout |
 | My Profile | Person | `/profile` | Logged-in users | Account details, password, order history |
-| Admin | Building | `/admin` | Admins only | Back-office dashboard |
-| Manage | Globe (dropdown) | — | Admins only | Submenu: Products, Categories, Quotations |
+| Admin | Building | `/admin` | Admins only | Back-office dashboard (products, categories, and quotations are managed from its sidebar) |
 | User block | — | — | Logged-in users | Shows full name + email |
 | Logout | Exit arrow | — | Logged-in users | Ends the session (clears the stored token) |
 | Login / Register | — | `/login`, `/register` | Guests | Replace the user block when logged out |
-
-### Manage submenu (admin only)
-
-| Entry | Route | Purpose |
-| ----- | ----- | ------- |
-| Products | `/admin/products` | Product CRUD (slide-over editor, stock, pricing) |
-| Categories | `/admin/categories` | List + create categories |
-| Quotations | `/admin/quotes` | Quotation request inbox |
 
 ## Pages and database interactions
 
