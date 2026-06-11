@@ -24,12 +24,16 @@ const createOrderSchema = z.object({
     )
     .min(1)
     .max(100),
+  paymentMethod: z.enum(["cod", "gcash", "bank_transfer"]),
+  shippingAddress: z.string().min(1, "Delivery address is required").max(500),
+  shippingPhone: z.string().max(60).optional(),
 });
 
 // POST /api/orders — place an order from cart items (authenticated)
 router.post("/", requireAuth, async (req: AuthedRequest, res, next) => {
   try {
-    const { items } = createOrderSchema.parse(req.body);
+    const { items, paymentMethod, shippingAddress, shippingPhone } =
+      createOrderSchema.parse(req.body);
     const userId = req.user!.sub;
 
     // Collapse duplicate product lines into one.
@@ -72,7 +76,14 @@ router.post("/", requireAuth, async (req: AuthedRequest, res, next) => {
 
       const [created] = await tx
         .insert(orders)
-        .values({ userId, totalCents, currency })
+        .values({
+          userId,
+          totalCents,
+          currency,
+          paymentMethod,
+          shippingAddress,
+          shippingPhone: shippingPhone ?? null,
+        })
         .returning();
 
       await tx.insert(orderItems).values(
@@ -133,6 +144,9 @@ router.get("/all", requireAuth, requireBackOffice, async (req, res, next) => {
       .select({
         id: orders.id,
         status: orders.status,
+        paymentMethod: orders.paymentMethod,
+        shippingAddress: orders.shippingAddress,
+        shippingPhone: orders.shippingPhone,
         totalCents: orders.totalCents,
         currency: orders.currency,
         createdAt: orders.createdAt,

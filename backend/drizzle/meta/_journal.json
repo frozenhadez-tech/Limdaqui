@@ -43,6 +43,13 @@
       "when": 1781171423364,
       "tag": "0005_sturdy_silver_fox",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1781171979887,
+      "tag": "0006_neat_thaddeus_ross",
+      "breakpoints": true
     }
   ]
 }

@@ -7,7 +7,9 @@ import { useAuth } from "@/lib/auth";
 import {
   formatDate,
   formatPrice,
+  PAYMENT_LABELS,
   type Category,
+  type PaymentMethod,
   type Product,
   type Quote,
 } from "@/lib/types";
@@ -21,6 +23,7 @@ type Row = Record<string, string | number>;
 type SalesOrder = {
   id: string;
   status: string;
+  paymentMethod: PaymentMethod;
   totalCents: number;
   currency: string;
   createdAt: string;
@@ -154,7 +157,7 @@ export default function AdminReportsPage() {
         ]),
         ["Note:", "Cancelled orders are excluded."],
         [],
-        ["Order ID", "Date", "Customer", "Email", "Items", "Units", "Total", "Currency", "Status"],
+        ["Order ID", "Date", "Customer", "Email", "Items", "Units", "Total", "Currency", "Payment", "Status"],
         ...sales.map((o) => [
           o.id.slice(0, 8),
           formatDate(o.createdAt),
@@ -164,6 +167,7 @@ export default function AdminReportsPage() {
           o.items.reduce((s, i) => s + i.quantity, 0),
           formatPrice(o.totalCents, o.currency),
           o.currency,
+          PAYMENT_LABELS[o.paymentMethod] ?? o.paymentMethod,
           o.status,
         ]),
       ];

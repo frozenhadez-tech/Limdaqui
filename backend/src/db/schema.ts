@@ -34,6 +34,11 @@ export const orderStatus = pgEnum("order_status", [
   "delivered",
   "cancelled",
 ]);
+export const paymentMethod = pgEnum("payment_method", [
+  "cod",
+  "gcash",
+  "bank_transfer",
+]);
 
 // ---------------------------------------------------------------------------
 // Tables
@@ -85,6 +90,10 @@ export const orders = pgTable("orders", {
     .notNull()
     .references(() => users.id, { onDelete: "restrict" }),
   status: orderStatus("status").notNull().default("pending"),
+  paymentMethod: paymentMethod("payment_method").notNull().default("cod"),
+  // Snapshot of the delivery details at checkout time.
+  shippingAddress: varchar("shipping_address", { length: 500 }),
+  shippingPhone: varchar("shipping_phone", { length: 60 }),
   totalCents: integer("total_cents").notNull().default(0),
   currency: varchar("currency", { length: 3 }).notNull().default("USD"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

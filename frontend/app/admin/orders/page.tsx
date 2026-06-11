@@ -3,7 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "@/lib/auth";
-import { formatDate, formatPrice, type Quote } from "@/lib/types";
+import {
+  formatDate,
+  formatPrice,
+  PAYMENT_LABELS,
+  type PaymentMethod,
+  type Quote,
+} from "@/lib/types";
 import { useAuthedFetch } from "@/lib/useAuthedFetch";
 
 const field =
@@ -14,6 +20,9 @@ type OrderStatus = "pending" | "paid" | "shipped" | "delivered" | "cancelled";
 type AdminOrder = {
   id: string;
   status: OrderStatus;
+  paymentMethod: PaymentMethod;
+  shippingAddress: string | null;
+  shippingPhone: string | null;
   totalCents: number;
   currency: string;
   createdAt: string;
@@ -255,6 +264,17 @@ export default function AdminOrdersPage() {
                     open ? (
                       <tr key={`${o.id}-items`} className="bg-gray-50/60">
                         <td colSpan={5} className="px-6 py-4">
+                          <div className="mb-3 flex flex-wrap gap-x-8 gap-y-1 text-xs text-gray-500">
+                            <span>
+                              <span className="font-semibold text-gray-600">Payment:</span>{" "}
+                              {PAYMENT_LABELS[o.paymentMethod] ?? o.paymentMethod}
+                            </span>
+                            <span>
+                              <span className="font-semibold text-gray-600">Deliver to:</span>{" "}
+                              {o.shippingAddress ?? "—"}
+                              {o.shippingPhone ? ` · ${o.shippingPhone}` : ""}
+                            </span>
+                          </div>
                           <ul className="space-y-1">
                             {o.items.map((item, i) => (
                               <li

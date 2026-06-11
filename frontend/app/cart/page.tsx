@@ -7,10 +7,18 @@ import Link from "next/link";
 import { apiFetch, resolveImageUrl } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useCart } from "@/lib/cart";
-import { formatPrice, type Product } from "@/lib/types";
+import {
+  formatPrice,
+  PAYMENT_LABELS,
+  type PaymentMethod,
+  type Product,
+} from "@/lib/types";
 import { useAuthedFetch } from "@/lib/useAuthedFetch";
 
 type CartRow = Product & { quantity: number };
+
+const checkoutField =
+  "w-full rounded-lg border border-gray-200 px-3.5 py-2 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20";
 
 export default function CartPage() {
   const { lines, setQuantity, remove, clear } = useCart();
@@ -21,6 +29,18 @@ export default function CartPage() {
   const [error, setError] = useState<string | null>(null);
   const [placing, setPlacing] = useState(false);
   const [placedOrderId, setPlacedOrderId] = useState<string | null>(null);
+
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cod");
+  const [shippingAddress, setShippingAddress] = useState("");
+  const [shippingPhone, setShippingPhone] = useState("");
+
+  // Prefill delivery details from the customer's profile.
+  useEffect(() => {
+    if (user) {
+      setShippingAddress((current) => current || (user.address ?? ""));
+      setShippingPhone((current) => current || (user.phone ?? ""));
+    }
+  }, [user]);
 
   // Load details for every product in the cart; silently drop deleted ones.
   useEffect(() => {
@@ -79,6 +99,9 @@ export default function CartPage() {
         method: "POST",
         body: JSON.stringify({
           items: rows.map((r) => ({ productId: r.id, quantity: r.quantity })),
+          paymentMethod,
+          shippingAddress: shippingAddress.trim(),
+          ...(shippingPhone.trim() ? { shippingPhone: shippingPhone.trim() } : {}),
         }),
       });
       clear();
@@ -263,13 +286,66 @@ export default function CartPage() {
               )}
 
               {authLoading ? null : user ? (
-                <button
-                  onClick={checkout}
-                  disabled={placing || mixedCurrencies}
-                  className="mt-5 w-full rounded-full bg-brand py-2.5 text-sm font-bold text-white transition hover:bg-brand-600 disabled:opacity-50"
-                >
-                  {placing ? "Placing order…" : "Place order"}
-                </button>
+                <>
+                  <div className="mt-5 border-t border-gray-100 pt-4">
+                    <p className="text-sm font-semibold text-ink">Payment method</p>
+                    <div className="mt-2 space-y-2">
+                      {(Object.keys(PAYMENT_LABELS) as PaymentMethod[]).map((m) => (
+                        <label
+                          key={m}
+                          className={`flex cursor-pointer items-center gap-2.5 rounded-lg border px-3.5 py-2.5 text-sm transition ${
+                            paymentMethod === m
+                              ? "border-brand bg-brand/5 font-semibold text-ink"
+                              : "border-gray-200 text-gray-600 hover:border-gray-300"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="payment"
+                            value={m}
+                            checked={paymentMethod === m}
+                            onChange={() => setPaymentMethod(m)}
+                            className="accent-[#e2231a]"
+                          />
+                          {PAYMENT_LABELS[m]}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 border-t border-gray-100 pt-4">
+                    <p className="text-sm font-semibold text-ink">Deliver to</p>
+                    <textarea
+                      rows={3}
+                      value={shippingAddress}
+                      onChange={(e) => setShippingAddress(e.target.value)}
+                      className={`${checkoutField} mt-2`}
+                      placeholder="House/Unit No., Street, Barangay, City, Province, ZIP"
+                      aria-label="Delivery address"
+                    />
+                    <input
+                      type="tel"
+                      value={shippingPhone}
+                      onChange={(e) => setShippingPhone(e.target.value)}
+                      className={`${checkoutField} mt-2`}
+                      placeholder="Contact number (optional)"
+                      aria-label="Contact number"
+                    />
+                  </div>
+
+                  <button
+                    onClick={checkout}
+                    disabled={placing || mixedCurrencies || !shippingAddress.trim()}
+                    title={
+                      !shippingAddress.trim()
+                        ? "Enter a delivery address to place your order"
+                        : undefined
+                    }
+                    className="mt-4 w-full rounded-full bg-brand py-2.5 text-sm font-bold text-white transition hover:bg-brand-600 disabled:opacity-50"
+                  >
+                    {placing ? "Placing order…" : "Place order"}
+                  </button>
+                </>
               ) : (
                 <>
                   <Link

@@ -29,9 +29,20 @@ export type OrderItem = {
   imageUrl: string | null;
 };
 
+export type PaymentMethod = "cod" | "gcash" | "bank_transfer";
+
+export const PAYMENT_LABELS: Record<PaymentMethod, string> = {
+  cod: "Cash on Delivery",
+  gcash: "GCash",
+  bank_transfer: "Bank Transfer",
+};
+
 export type Order = {
   id: string;
   status: "pending" | "paid" | "shipped" | "delivered" | "cancelled";
+  paymentMethod: PaymentMethod;
+  shippingAddress: string | null;
+  shippingPhone: string | null;
   totalCents: number;
   currency: string;
   createdAt: string;

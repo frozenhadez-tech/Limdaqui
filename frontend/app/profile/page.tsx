@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import { useAuth, type User } from "@/lib/auth";
-import { formatDate, formatPrice, type Order } from "@/lib/types";
+import { formatDate, formatPrice, PAYMENT_LABELS, type Order } from "@/lib/types";
 import { useAuthedFetch } from "@/lib/useAuthedFetch";
 
 const field =
@@ -315,10 +315,19 @@ export default function ProfilePage() {
                       <span className="text-xs text-gray-400">
                         {formatDate(o.createdAt)}
                       </span>
+                      <span className="text-xs font-medium text-gray-500">
+                        {PAYMENT_LABELS[o.paymentMethod] ?? o.paymentMethod}
+                      </span>
                       <span className="ml-auto font-bold text-ink">
                         {formatPrice(o.totalCents, o.currency)}
                       </span>
                     </div>
+                    {o.shippingAddress && (
+                      <p className="mt-1 text-xs text-gray-400">
+                        Deliver to: {o.shippingAddress}
+                        {o.shippingPhone ? ` · ${o.shippingPhone}` : ""}
+                      </p>
+                    )}
                     <ul className="mt-2 space-y-1">
                       {o.items.map((item) => (
                         <li
