@@ -21,6 +21,7 @@ const bytea = customType<{ data: Buffer }>({
 // Enums
 // ---------------------------------------------------------------------------
 export const userRole = pgEnum("user_role", ["customer", "admin"]);
+export const userStatus = pgEnum("user_status", ["active", "suspended"]);
 export const orderStatus = pgEnum("order_status", [
   "pending",
   "paid",
@@ -38,6 +39,7 @@ export const users = pgTable("users", {
   passwordHash: text("password_hash").notNull(),
   fullName: varchar("full_name", { length: 255 }),
   role: userRole("role").notNull().default("customer"),
+  status: userStatus("status").notNull().default("active"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

@@ -99,6 +99,10 @@ router.post("/login", authLimiter, async (req, res, next) => {
     const ok = await verifyPassword(data.password, row.passwordHash);
     if (!ok) throw new HttpError(401, "Invalid email or password");
 
+    if (row.status === "suspended") {
+      throw new HttpError(403, "This account has been suspended");
+    }
+
     const user = toPublicUser(row);
     const token = signToken({ sub: user.id, email: user.email, role: user.role });
     res.json({ token, user });
@@ -115,6 +119,9 @@ router.get("/me", requireAuth, async (req: AuthedRequest, res, next) => {
       .from(users)
       .where(eq(users.id, req.user!.sub));
     if (!row) throw new HttpError(404, "User not found");
+    if (row.status === "suspended") {
+      throw new HttpError(403, "This account has been suspended");
+    }
     res.json({ user: toPublicUser(row) });
   } catch (err) {
     next(err);

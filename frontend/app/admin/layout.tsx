@@ -25,6 +25,7 @@ const NAV = [
   { href: "/admin/quotes", label: "Quotations", d: "M21 12a8 8 0 0 1-11.6 7.1L4 20l1-5.1A8 8 0 1 1 21 12Z" },
   { href: "/admin/products", label: "Products", d: "M3.5 8 12 3l8.5 5v8L12 21l-8.5-5V8Zm0 0L12 13l8.5-5M12 13v8" },
   { href: "/admin/categories", label: "Categories", d: "M4 7h16M4 12h16M4 17h10" },
+  { href: "/admin/users", label: "User Management", d: "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 9a7 7 0 0 1 14 0M16.5 3.5a4 4 0 0 1 0 7M22 20a7 7 0 0 0-5-6.7" },
 ];
 
 function GatePanel({

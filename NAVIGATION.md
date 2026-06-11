@@ -32,6 +32,7 @@ a `title` tooltip and `aria-label`; menus close on Escape and outside-click.
 | `/admin/products` | products CRUD (admin); `POST /api/images` for uploads, served via `GET /api/images/:id` | `products`, `product_images` |
 | `/admin/categories` | `GET/POST /api/categories` (POST admin) | `categories` |
 | `/admin/quotes` | `GET /api/quotes` (admin, paginated) | `quotes` |
+| `/admin/users` | `GET/POST /api/users`, `PATCH/DELETE /api/users/:id` (all admin) | `users` |
 
 ## Cart & orders workflow
 
@@ -59,3 +60,8 @@ a `title` tooltip and `aria-label`; menus close on Escape and outside-click.
 - Client-side gates: `/profile` and checkout require a session; `/admin/*`
   requires the `admin` role (non-admins get a "No access" panel).
 - Login/registration and the public quote form are rate-limited.
+- User management (`/admin/users`): admins can add, edit, suspend/reactivate,
+  and delete users (search by name/email). Suspended users cannot log in and
+  active sessions are rejected on the next `/me` check. Admins cannot suspend,
+  delete, or demote their own account; users with orders cannot be deleted
+  (FK-protected → 409), only suspended.
