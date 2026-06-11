@@ -49,6 +49,19 @@ function CheckShield() {
   );
 }
 
+function NinjaHead() {
+  return (
+    <svg {...iconProps} width="14" height="14">
+      {/* Hooded head with an eye slit and headband tails */}
+      <circle cx="11" cy="12" r="8" />
+      <path d="M3.5 10.5h15M4 14h14" />
+      <circle cx="8" cy="12.2" r="1" fill="currentColor" stroke="none" />
+      <circle cx="14" cy="12.2" r="1" fill="currentColor" stroke="none" />
+      <path d="M19 9.5l3-1.5M19.3 12l2.7-.5" />
+    </svg>
+  );
+}
+
 const QUICK_LINKS = [
   { href: "/", label: "Home" },
   { href: "/products", label: "Shop Products" },
@@ -145,9 +158,14 @@ export function Footer() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-xs sm:flex-row">
           <p>© 2026 Limdaqui Trading Inc. All rights reserved.</p>
-          <p className="flex items-center gap-1.5">
-            <CheckShield /> FDA Approved
-          </p>
+          <div className="flex flex-col items-center gap-1.5 sm:items-end">
+            <p className="flex items-center gap-1.5">
+              <CheckShield /> FDA Approved
+            </p>
+            <p className="flex items-center gap-1.5">
+              <NinjaHead /> NINJA
+            </p>
+          </div>
         </div>
       </div>
     </footer>
