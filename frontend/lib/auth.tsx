@@ -8,7 +8,7 @@ import {
   useState,
 } from "react";
 
-import { API_URL } from "./api";
+import { apiFetch } from "./api";
 
 export type User = {
   id: string;
@@ -35,19 +35,11 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 const TOKEN_KEY = "limdaqui_token";
 
-async function postAuth(path: string, body: unknown) {
-  const res = await fetch(`${API_URL}${path}`, {
+function postAuth(path: string, body: unknown) {
+  return apiFetch<{ token: string; user: User }>(path, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const message =
-      data?.issues?.[0]?.message || data?.error || "Something went wrong";
-    throw new Error(message);
-  }
-  return data as { token: string; user: User };
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -63,10 +55,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     setToken(stored);
-    fetch(`${API_URL}/api/auth/me`, {
+    apiFetch<{ user: User }>("/api/auth/me", {
       headers: { Authorization: `Bearer ${stored}` },
     })
-      .then((res) => (res.ok ? res.json() : Promise.reject()))
       .then((data) => setUser(data.user))
       .catch(() => {
         localStorage.removeItem(TOKEN_KEY);

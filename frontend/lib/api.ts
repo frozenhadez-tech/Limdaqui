@@ -3,7 +3,8 @@ export const API_URL =
 
 /**
  * Thin fetch wrapper around the backend API.
- * Throws on non-2xx responses; returns parsed JSON otherwise.
+ * On non-2xx responses, throws an Error with the best human-readable message
+ * the backend provided (first validation issue, then `error`, then a fallback).
  */
 export async function apiFetch<T>(
   path: string,
@@ -17,10 +18,15 @@ export async function apiFetch<T>(
     },
   });
 
+  const data = await res.json().catch(() => ({}));
+
   if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`API ${res.status} ${res.statusText}: ${body}`);
+    const message =
+      data?.issues?.[0]?.message ||
+      data?.error ||
+      `Request failed (${res.status})`;
+    throw new Error(message);
   }
 
-  return res.json() as Promise<T>;
+  return data as T;
 }

@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { db } from "../db/index.js";
 import { categories } from "../db/schema.js";
+import { requireAdmin, requireAuth } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -29,8 +30,8 @@ router.get("/", async (_req, res, next) => {
   }
 });
 
-// POST /api/categories — create a category
-router.post("/", async (req, res, next) => {
+// POST /api/categories — create a category (admin)
+router.post("/", requireAuth, requireAdmin, async (req, res, next) => {
   try {
     const data = createCategorySchema.parse(req.body);
     const [row] = await db.insert(categories).values(data).returning();

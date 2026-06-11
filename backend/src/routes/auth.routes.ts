@@ -11,17 +11,25 @@ import {
 } from "../lib/auth.js";
 import { requireAuth, type AuthedRequest } from "../middleware/auth.js";
 import { HttpError } from "../middleware/errorHandler.js";
+import { authLimiter } from "../middleware/rateLimit.js";
 
 const router = Router();
 
+// Normalize emails so "Foo@x.com" and "foo@x.com" are the same account.
+const emailField = z
+  .string()
+  .email()
+  .max(255)
+  .transform((value) => value.toLowerCase());
+
 const registerSchema = z.object({
-  email: z.string().email().max(255),
+  email: emailField,
   password: z.string().min(8).max(200),
   fullName: z.string().min(1).max(255).optional(),
 });
 
 const loginSchema = z.object({
-  email: z.string().email().max(255),
+  email: emailField,
   password: z.string().min(1).max(200),
 });
 
@@ -47,7 +55,7 @@ function toPublicUser(row: {
 }
 
 // POST /api/auth/register
-router.post("/register", async (req, res, next) => {
+router.post("/register", authLimiter, async (req, res, next) => {
   try {
     const data = registerSchema.parse(req.body);
 
@@ -78,7 +86,7 @@ router.post("/register", async (req, res, next) => {
 });
 
 // POST /api/auth/login
-router.post("/login", async (req, res, next) => {
+router.post("/login", authLimiter, async (req, res, next) => {
   try {
     const data = loginSchema.parse(req.body);
 

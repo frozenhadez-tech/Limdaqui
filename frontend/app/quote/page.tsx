@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { API_URL } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 
 const field =
   "w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20";
@@ -36,17 +36,10 @@ export default function QuotePage() {
         ...(form.company ? { company: form.company } : {}),
         ...(form.phone ? { phone: form.phone } : {}),
       };
-      const res = await fetch(`${API_URL}/api/quotes`, {
+      await apiFetch("/api/quotes", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(
-          data?.issues?.[0]?.message || data?.error || "Submission failed",
-        );
-      }
       setDone(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Submission failed");

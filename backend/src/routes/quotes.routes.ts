@@ -5,6 +5,7 @@ import { z } from "zod";
 import { db } from "../db/index.js";
 import { quotes } from "../db/schema.js";
 import { requireAdmin, requireAuth } from "../middleware/auth.js";
+import { quoteLimiter } from "../middleware/rateLimit.js";
 
 const router = Router();
 
@@ -17,7 +18,7 @@ const quoteSchema = z.object({
 });
 
 // POST /api/quotes — submit a quotation request (public)
-router.post("/", async (req, res, next) => {
+router.post("/", quoteLimiter, async (req, res, next) => {
   try {
     const data = quoteSchema.parse(req.body);
     const [row] = await db.insert(quotes).values(data).returning();
@@ -27,10 +28,22 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-// GET /api/quotes — list submissions (admin only)
-router.get("/", requireAuth, requireAdmin, async (_req, res, next) => {
+// GET /api/quotes?limit=&offset= — list submissions (admin only)
+router.get("/", requireAuth, requireAdmin, async (req, res, next) => {
   try {
-    const rows = await db.select().from(quotes).orderBy(desc(quotes.createdAt));
+    const query = z
+      .object({
+        limit: z.coerce.number().int().min(1).max(100).default(50),
+        offset: z.coerce.number().int().min(0).default(0),
+      })
+      .parse(req.query);
+
+    const rows = await db
+      .select()
+      .from(quotes)
+      .orderBy(desc(quotes.createdAt))
+      .limit(query.limit)
+      .offset(query.offset);
     res.json(rows);
   } catch (err) {
     next(err);

@@ -8,6 +8,9 @@ import routes from "./routes/index.js";
 export function createApp() {
   const app = express();
 
+  // Behind Cloud Run's proxy; needed for rate limiting to see real client IPs.
+  app.set("trust proxy", 1);
+
   app.use(cors({ origin: env.corsOrigin }));
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));

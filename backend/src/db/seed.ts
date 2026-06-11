@@ -1,5 +1,6 @@
+import { hashPassword } from "../lib/auth.js";
 import { db, pool } from "./index.js";
-import { categories, products } from "./schema.js";
+import { categories, products, users } from "./schema.js";
 
 const CATEGORIES = [
   { name: "Electronics", slug: "electronics" },
@@ -65,7 +66,32 @@ const PRODUCTS: SeedProduct[] = [
   },
 ];
 
+/**
+ * Ensure an admin account exists when ADMIN_EMAIL + ADMIN_PASSWORD are set.
+ * If the user already exists, it is promoted to admin (password unchanged).
+ */
+async function ensureAdmin() {
+  const email = process.env.ADMIN_EMAIL?.toLowerCase();
+  const password = process.env.ADMIN_PASSWORD;
+  if (!email || !password) {
+    console.log("ADMIN_EMAIL/ADMIN_PASSWORD not set, skipping admin user.");
+    return;
+  }
+
+  console.log(`Ensuring admin user ${email}...`);
+  const passwordHash = await hashPassword(password);
+  await db
+    .insert(users)
+    .values({ email, passwordHash, role: "admin" })
+    .onConflictDoUpdate({
+      target: users.email,
+      set: { role: "admin", updatedAt: new Date() },
+    });
+}
+
 async function main() {
+  await ensureAdmin();
+
   console.log("Seeding categories...");
   await db.insert(categories).values(CATEGORIES).onConflictDoNothing();
 
