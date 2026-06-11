@@ -64,7 +64,7 @@ export function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-3">
-              <Logo className="h-9 w-9" dark />
+              <Logo className="h-8 w-16" dark />
               <span className="leading-none">
                 <span className="block font-display text-lg font-extrabold tracking-tight text-brand">
                   LIMDAQUI

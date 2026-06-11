@@ -129,7 +129,7 @@ export function Header() {
           href="/"
           className="flex shrink-0 items-center gap-3 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
         >
-          <Logo className="h-9 w-9" />
+          <Logo className="h-8 w-16" />
           <span className="leading-none">
             <span className="block font-display text-lg font-extrabold tracking-tight text-brand">
               LIMDAQUI

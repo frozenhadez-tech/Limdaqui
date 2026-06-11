@@ -48,7 +48,7 @@ function GatePanel({
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-50 px-6">
       <div className="w-full max-w-md rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-sm">
-        <Logo className="mx-auto h-10 w-10" />
+        <Logo className="mx-auto h-9 w-18" />
         <h1 className="mt-4 font-display text-xl font-extrabold tracking-tight text-ink">
           {title}
         </h1>
@@ -113,7 +113,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         />
 
         <div className="relative flex items-center gap-3 px-6 pb-6 pt-7">
-          <Logo className="h-9 w-9" dark />
+          <Logo className="h-8 w-16" dark />
           <span className="leading-none">
             <span className="block font-display text-base font-extrabold tracking-tight">
               LIMDAQUI

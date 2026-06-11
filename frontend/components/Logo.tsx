@@ -7,16 +7,16 @@ export function Logo({
 }) {
   return (
     <svg
-      viewBox="0 0 40 40"
+      viewBox="0 0 420 210"
       className={className}
       fill="none"
       aria-hidden="true"
     >
       {/* L */}
-      <path d="M6 7 H12 V26 H18 V32 H6 Z" fill="var(--color-brand)" />
+      <path d="M15 15 H125 V125 H250 V190 H15 Z" fill="var(--color-brand)" />
       {/* D */}
       <path
-        d="M21 7 H27 A13 13 0 0 1 27 32 H21 V25 H26 A6 6 0 0 0 26 14 H21 Z"
+        d="M133 15 H260 C355 15 408 57 408 102 C408 148 355 190 260 190 H250 V130 H258 C290 130 307 119 307 103 C307 86 290 76 258 76 H250 V117 H133 Z"
         fill={dark ? "#ffffff" : "var(--color-ink)"}
       />
     </svg>
