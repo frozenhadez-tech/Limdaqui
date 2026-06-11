@@ -158,7 +158,7 @@ export function Footer() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-xs sm:flex-row">
           <p>© 2026 Limdaqui Trading Inc. All rights reserved.</p>
-          <div className="flex flex-col items-center gap-1.5 sm:items-end">
+          <div className="flex items-center gap-5">
             <p className="flex items-center gap-1.5">
               <CheckShield /> FDA Approved
             </p>
