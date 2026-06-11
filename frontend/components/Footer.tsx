@@ -163,7 +163,7 @@ export function Footer() {
               <CheckShield /> FDA Approved
             </p>
             <p className="flex items-center gap-1.5">
-              <NinjaHead /> NINJA
+              <NinjaHead /> Ninja
             </p>
           </div>
         </div>
