@@ -109,7 +109,133 @@ body {
   animation: drift-b 21s ease-in-out infinite;
 }
 
+/* Slow-panning tech grid, masked to fade toward the edges */
+@keyframes grid-pan {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 60px 60px;
+  }
+}
+.hero-grid {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: grid-pan 20s linear infinite;
+  -webkit-mask-image: radial-gradient(120% 90% at 50% 35%, #000 35%, transparent 75%);
+  mask-image: radial-gradient(120% 90% at 50% 35%, #000 35%, transparent 75%);
+}
+
+/* Periodic diagonal light sweep */
+@keyframes sheen {
+  0% {
+    transform: translateX(-150%) skewX(-14deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.5;
+  }
+  45%,
+  100% {
+    transform: translateX(450%) skewX(-14deg);
+    opacity: 0;
+  }
+}
+.hero-sheen {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.09),
+    transparent
+  );
+  animation: sheen 11s ease-in-out infinite;
+}
+
+/* Floating glow particles rising through the hero */
+@keyframes rise {
+  0% {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.8;
+  }
+  85% {
+    opacity: 0.35;
+  }
+  100% {
+    transform: translateY(-150px);
+    opacity: 0;
+  }
+}
+.particle {
+  position: absolute;
+  bottom: -12px;
+  height: 6px;
+  width: 6px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 10px 2px rgba(226, 35, 26, 0.45);
+  animation: rise linear infinite;
+}
+
+/* Shimmer sweeping across the red wordmark */
+@keyframes shimmer {
+  to {
+    background-position: 200% center;
+  }
+}
+.text-shimmer {
+  background: linear-gradient(
+    100deg,
+    var(--color-brand) 35%,
+    #ff8077 50%,
+    var(--color-brand) 65%
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: shimmer 5s linear infinite;
+}
+
+/* Breathing glow on the primary CTA */
+@keyframes glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 10px 26px -6px rgba(226, 35, 26, 0.45);
+  }
+  50% {
+    box-shadow: 0 12px 40px 0 rgba(226, 35, 26, 0.7);
+  }
+}
+.btn-glow {
+  animation: glow-pulse 3.2s ease-in-out infinite;
+}
+
+/* Scroll-triggered reveal (driven by components/Reveal.tsx) */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0s);
+  will-change: opacity, transform;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
   .animate-fade-up {
     animation: none;
     opacity: 1;
@@ -119,7 +245,20 @@ body {
     opacity: 0.18;
   }
   .blob-a,
-  .blob-b {
+  .blob-b,
+  .hero-grid,
+  .hero-sheen,
+  .particle,
+  .btn-glow {
     animation: none;
+  }
+  .text-shimmer {
+    animation: none;
+    background: none;
+    color: var(--color-brand);
+    -webkit-text-fill-color: var(--color-brand);
+  }
+  .particle {
+    display: none;
   }
 }

@@ -1,4 +1,9 @@
+import type { CSSProperties } from "react";
+
 import Link from "next/link";
+
+import { CountUp } from "@/components/CountUp";
+import { Reveal } from "@/components/Reveal";
 
 /* ---------------------------------------------------------------- icons */
 
@@ -101,6 +106,16 @@ function MedalIcon() {
 
 /* ---------------------------------------------------------------- data */
 
+const PARTICLES: CSSProperties[] = [
+  { left: "8%", animationDuration: "9s", animationDelay: "0s" },
+  { left: "20%", animationDuration: "12s", animationDelay: "-3s" },
+  { left: "35%", animationDuration: "10s", animationDelay: "-6s" },
+  { left: "50%", animationDuration: "13s", animationDelay: "-1.5s" },
+  { left: "66%", animationDuration: "11s", animationDelay: "-4.5s" },
+  { left: "80%", animationDuration: "9.5s", animationDelay: "-7s" },
+  { left: "92%", animationDuration: "12.5s", animationDelay: "-2s" },
+];
+
 const STATS = [
   { value: "10+", label: "Years Experience" },
   { value: "500+", label: "Products Available" },
@@ -136,11 +151,23 @@ export default function Home() {
         />
         {/* legibility darkening over the photo */}
         <div className="absolute inset-0 -z-20 bg-[linear-gradient(to_bottom,rgba(11,17,31,0.35),rgba(11,17,31,0.92))]" />
+        {/* slow-panning tech grid */}
+        <div className="hero-grid absolute inset-0 -z-10" />
         {/* drifting, breathing glow blobs */}
         <div className="blob-a absolute -bottom-32 -left-32 -z-10 h-[36rem] w-[36rem] rounded-full bg-brand/25 blur-3xl" />
         <div className="blob-b absolute -right-24 -top-24 -z-10 h-[32rem] w-[32rem] rounded-full bg-[#274690]/30 blur-3xl" />
         {/* top red wash */}
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(60%_50%_at_50%_-5%,rgba(226,35,26,0.16),transparent_65%)]" />
+        {/* rising glow particles */}
+        <div className="absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
+          {PARTICLES.map((style, i) => (
+            <span key={i} className="particle" style={style} />
+          ))}
+        </div>
+        {/* periodic diagonal light sweep */}
+        <div className="absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
+          <div className="hero-sheen absolute inset-y-0 w-1/4" />
+        </div>
 
         <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-5xl flex-col items-center justify-center px-6 py-24 text-center">
           <span className="animate-fade-up inline-flex items-center gap-2.5 rounded-full border border-brand/40 bg-brand/10 px-4 py-1.5 text-sm font-semibold text-red-200">
@@ -150,7 +177,7 @@ export default function Home() {
 
           <h1 className="animate-fade-up delay-1 mt-8 font-display text-5xl font-extrabold leading-[0.92] tracking-tight text-white sm:text-7xl">
             LIMDAQUI
-            <span className="mt-1 block text-brand">TRADING INC.</span>
+            <span className="text-shimmer mt-1 block">TRADING INC.</span>
           </h1>
 
           <p className="animate-fade-up delay-2 mt-7 max-w-2xl text-lg leading-relaxed text-gray-300">
@@ -161,19 +188,19 @@ export default function Home() {
           <div className="animate-fade-up delay-3 mt-10 flex flex-wrap items-center justify-center gap-4">
             <Link
               href="/products"
-              className="inline-flex items-center gap-2 rounded-full bg-brand px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-brand/30 transition hover:bg-brand-600"
+              className="btn-glow inline-flex items-center gap-2 rounded-full bg-brand px-7 py-3.5 text-sm font-bold text-white transition hover:scale-105 hover:bg-brand-600 active:scale-95"
             >
               Shop Now <CartIcon />
             </Link>
             <Link
               href="/register"
-              className="inline-flex items-center gap-2 rounded-full border border-white/25 px-7 py-3.5 text-sm font-semibold text-white transition hover:border-white/60 hover:bg-white/5"
+              className="inline-flex items-center gap-2 rounded-full border border-white/25 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:scale-105 hover:border-white/60 hover:bg-white/10 active:scale-95"
             >
               Create Account
             </Link>
             <Link
               href="/quote"
-              className="inline-flex items-center gap-2 rounded-full border border-white/25 px-7 py-3.5 text-sm font-semibold text-white transition hover:border-white/60 hover:bg-white/5"
+              className="inline-flex items-center gap-2 rounded-full border border-white/25 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:scale-105 hover:border-white/60 hover:bg-white/10 active:scale-95"
             >
               Request Quotation <DocIcon />
             </Link>
@@ -182,17 +209,18 @@ export default function Home() {
       </section>
 
       {/* Stats bar */}
-      <section className="bg-brand">
+      <section className="relative overflow-hidden bg-brand">
+        <div className="blob-b absolute -right-20 -top-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" aria-hidden="true" />
         <div className="mx-auto grid max-w-7xl grid-cols-2 gap-x-6 gap-y-10 px-6 py-14 text-center text-white md:grid-cols-4">
-          {STATS.map((stat) => (
-            <div key={stat.label}>
+          {STATS.map((stat, i) => (
+            <Reveal key={stat.label} delay={i * 0.12}>
               <div className="font-display text-4xl font-extrabold sm:text-5xl">
-                {stat.value}
+                <CountUp value={stat.value} />
               </div>
               <div className="mt-1.5 text-sm font-medium text-red-100/90">
                 {stat.label}
               </div>
-            </div>
+            </Reveal>
           ))}
         </div>
       </section>
@@ -200,35 +228,38 @@ export default function Home() {
       {/* Why choose us */}
       <section className="bg-white py-20">
         <div className="mx-auto max-w-7xl px-6">
-          <p className="text-center text-sm font-bold uppercase tracking-[0.2em] text-brand">
-            Why Choose Us
-          </p>
-          <h2 className="mt-3 text-center font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
-            The LIMDAQUI Advantage
-          </h2>
+          <Reveal>
+            <p className="text-center text-sm font-bold uppercase tracking-[0.2em] text-brand">
+              Why Choose Us
+            </p>
+            <h2 className="mt-3 text-center font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
+              The LIMDAQUI Advantage
+            </h2>
+          </Reveal>
 
           <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((feature) => (
-              <div
-                key={feature.title}
-                className="rounded-2xl border border-gray-100 bg-gray-50/70 p-7 transition hover:-translate-y-0.5 hover:border-gray-200 hover:bg-white hover:shadow-md"
-              >
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand/10 text-brand">
-                  {feature.icon}
+            {FEATURES.map((feature, i) => (
+              <Reveal key={feature.title} delay={(i % 3) * 0.12}>
+                <div className="group h-full rounded-2xl border border-gray-100 bg-gray-50/70 p-7 transition-all duration-300 hover:-translate-y-1.5 hover:border-brand/20 hover:bg-white hover:shadow-xl hover:shadow-brand/5">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand/10 text-brand transition-all duration-300 group-hover:scale-110 group-hover:bg-brand group-hover:text-white group-hover:shadow-lg group-hover:shadow-brand/30">
+                    {feature.icon}
+                  </div>
+                  <h3 className="mt-5 text-lg font-bold text-ink">
+                    {feature.title}
+                  </h3>
+                  <p className="mt-1.5 text-sm text-gray-500">{feature.desc}</p>
                 </div>
-                <h3 className="mt-5 text-lg font-bold text-ink">
-                  {feature.title}
-                </h3>
-                <p className="mt-1.5 text-sm text-gray-500">{feature.desc}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
       </section>
 
       {/* Call to action */}
-      <section className="bg-brand">
-        <div className="mx-auto max-w-4xl px-6 py-24 text-center">
+      <section className="relative overflow-hidden bg-brand">
+        <div className="blob-a absolute -left-24 -bottom-32 h-96 w-96 rounded-full bg-white/10 blur-3xl" aria-hidden="true" />
+        <div className="blob-b absolute -right-24 -top-24 h-80 w-80 rounded-full bg-ink/20 blur-3xl" aria-hidden="true" />
+        <Reveal className="relative mx-auto max-w-4xl px-6 py-24 text-center">
           <h2 className="font-display text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
             Ready to Start Shopping?
           </h2>
@@ -238,10 +269,17 @@ export default function Home() {
           </p>
           <Link
             href="/products"
-            className="mt-9 inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-brand shadow-lg transition hover:bg-red-50"
+            className="group mt-9 inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-brand shadow-lg transition hover:scale-105 hover:bg-red-50 active:scale-95"
           >
             Browse Products
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+              className="transition-transform duration-300 group-hover:translate-x-1"
+            >
               <path
                 d="m9 6 6 6-6 6"
                 stroke="currentColor"
@@ -251,7 +289,7 @@ export default function Home() {
               />
             </svg>
           </Link>
-        </div>
+        </Reveal>
       </section>
     </>
   );
