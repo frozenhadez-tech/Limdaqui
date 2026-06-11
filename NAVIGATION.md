@@ -32,7 +32,12 @@ a `title` tooltip and `aria-label`; menus close on Escape and outside-click.
 | `/admin/products` | products CRUD (admin); `POST /api/images` for uploads, served via `GET /api/images/:id` | `products`, `product_images` |
 | `/admin/categories` | `GET/POST /api/categories` (POST admin) | `categories` |
 | `/admin/orders` | `GET /api/orders/all` (staff+, supports from/to), `PATCH /api/orders/:id/status` (staff+), `GET/PUT /api/settings/payment-info`, `GET /api/quotes` (staff+) | `orders`, `order_items`, `users`, `quotes`, `settings` |
-| `/admin/reports` | `GET /api/orders/all`, `GET /api/products`, `GET /api/quotes`, `GET /api/users` | read-only CSV exports incl. period sales report |
+| `/admin/reports` | `GET /api/orders/all`, `GET /api/products`, `GET /api/quotes`, `GET /api/users`, `GET /api/visits/stats` | CSV exports incl. period sales report; site-visitor totals |
+
+Visitor tracking: the public site posts anonymous page views to `POST /api/visits`
+(rate-limited; `/admin` browsing excluded; visitor id is a client-side UUID).
+Product prices render only for signed-in users (UI-level: the products API
+itself stays public so the storefront can server-render).
 | `/admin/users` | `GET/POST /api/users`, `PATCH/DELETE /api/users/:id` (all admin) | `users` |
 
 ## Checkout & payment

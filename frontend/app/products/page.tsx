@@ -1,8 +1,9 @@
 import Link from "next/link";
 
 import { AddToCartButton } from "@/components/AddToCartButton";
+import { PriceTag } from "@/components/PriceTag";
 import { API_URL, resolveImageUrl } from "@/lib/api";
-import { formatPrice, type Product } from "@/lib/types";
+import { type Product } from "@/lib/types";
 
 // Revalidate the product list at most once per minute (ISR).
 export const revalidate = 60;
@@ -44,7 +45,7 @@ export default async function ProductsPage() {
           {products.map((product) => (
             <li
               key={product.id}
-              className="group overflow-hidden rounded-xl border border-gray-200 bg-white transition hover:shadow-lg dark:border-gray-800 dark:bg-gray-900"
+              className="group overflow-hidden rounded-xl border border-gray-200 bg-white transition hover:shadow-lg"
             >
               {product.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -54,7 +55,7 @@ export default async function ProductsPage() {
                   className="aspect-square w-full object-cover"
                 />
               ) : (
-                <div className="aspect-square w-full bg-gray-100 dark:bg-gray-800" />
+                <div className="aspect-square w-full bg-gray-100" />
               )}
               <div className="p-4">
                 {product.categoryName && (
@@ -62,16 +63,17 @@ export default async function ProductsPage() {
                     {product.categoryName}
                   </p>
                 )}
-                <h2 className="font-semibold">{product.name}</h2>
+                <h2 className="font-semibold text-ink">{product.name}</h2>
                 {product.description && (
                   <p className="mt-1 line-clamp-2 text-sm text-gray-500">
                     {product.description}
                   </p>
                 )}
                 <div className="mt-3 flex items-center justify-between">
-                  <span className="text-lg font-bold">
-                    {formatPrice(product.priceCents, product.currency)}
-                  </span>
+                  <PriceTag
+                    cents={product.priceCents}
+                    currency={product.currency}
+                  />
                   <span
                     className={
                       product.stock > 0

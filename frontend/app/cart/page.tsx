@@ -219,7 +219,7 @@ export default function CartPage() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold text-ink">{r.name}</p>
                     <p className="text-sm text-gray-500">
-                      {formatPrice(r.priceCents, r.currency)}
+                      {user ? formatPrice(r.priceCents, r.currency) : "Price hidden"}
                       {r.quantity > r.stock && (
                         <span className="ml-2 text-xs font-semibold text-amber-600">
                           Only {r.stock} in stock
@@ -250,7 +250,7 @@ export default function CartPage() {
                     </button>
                   </div>
                   <p className="w-24 text-right font-bold text-ink">
-                    {formatPrice(r.priceCents * r.quantity, r.currency)}
+                    {user ? formatPrice(r.priceCents * r.quantity, r.currency) : "—"}
                   </p>
                   <button
                     onClick={() => remove(r.id)}
@@ -276,16 +276,22 @@ export default function CartPage() {
               <h2 className="font-display text-base font-extrabold tracking-tight text-ink">
                 Summary
               </h2>
-              <dl className="mt-4 space-y-2 text-sm">
-                {totalsByCurrency.map(([currency, cents]) => (
-                  <div key={currency} className="flex justify-between">
-                    <dt className="text-gray-500">Total ({currency})</dt>
-                    <dd className="font-bold text-ink">
-                      {formatPrice(cents, currency)}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
+              {user ? (
+                <dl className="mt-4 space-y-2 text-sm">
+                  {totalsByCurrency.map(([currency, cents]) => (
+                    <div key={currency} className="flex justify-between">
+                      <dt className="text-gray-500">Total ({currency})</dt>
+                      <dd className="font-bold text-ink">
+                        {formatPrice(cents, currency)}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : (
+                <p className="mt-4 text-sm text-gray-500">
+                  Prices and totals are visible to registered customers.
+                </p>
+              )}
 
               {mixedCurrencies && (
                 <p className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
