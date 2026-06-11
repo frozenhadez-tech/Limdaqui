@@ -10,6 +10,7 @@ import { useCart } from "@/lib/cart";
 import {
   formatPrice,
   PAYMENT_LABELS,
+  type PaymentInfo,
   type PaymentMethod,
   type Product,
 } from "@/lib/types";
@@ -33,6 +34,14 @@ export default function CartPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cod");
   const [shippingAddress, setShippingAddress] = useState("");
   const [shippingPhone, setShippingPhone] = useState("");
+  const [payInfo, setPayInfo] = useState<PaymentInfo | null>(null);
+
+  // Payment instructions maintained by the back office.
+  useEffect(() => {
+    apiFetch<PaymentInfo>("/api/settings/payment-info")
+      .then(setPayInfo)
+      .catch(() => {});
+  }, []);
 
   // Prefill delivery details from the customer's profile.
   useEffect(() => {
@@ -291,24 +300,97 @@ export default function CartPage() {
                     <p className="text-sm font-semibold text-ink">Payment method</p>
                     <div className="mt-2 space-y-2">
                       {(Object.keys(PAYMENT_LABELS) as PaymentMethod[]).map((m) => (
-                        <label
-                          key={m}
-                          className={`flex cursor-pointer items-center gap-2.5 rounded-lg border px-3.5 py-2.5 text-sm transition ${
-                            paymentMethod === m
-                              ? "border-brand bg-brand/5 font-semibold text-ink"
-                              : "border-gray-200 text-gray-600 hover:border-gray-300"
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="payment"
-                            value={m}
-                            checked={paymentMethod === m}
-                            onChange={() => setPaymentMethod(m)}
-                            className="accent-[#e2231a]"
-                          />
-                          {PAYMENT_LABELS[m]}
-                        </label>
+                        <div key={m}>
+                          <label
+                            className={`flex cursor-pointer items-center gap-2.5 rounded-lg border px-3.5 py-2.5 text-sm transition ${
+                              paymentMethod === m
+                                ? "border-brand bg-brand/5 font-semibold text-ink"
+                                : "border-gray-200 text-gray-600 hover:border-gray-300"
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="payment"
+                              value={m}
+                              checked={paymentMethod === m}
+                              onChange={() => setPaymentMethod(m)}
+                              className="accent-[#e2231a]"
+                            />
+                            {PAYMENT_LABELS[m]}
+                          </label>
+
+                          {paymentMethod === m && m === "gcash" && (
+                            <div className="mt-1.5 rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-3 text-xs text-gray-600">
+                              {payInfo?.gcash.accountNumber ? (
+                                <dl className="space-y-1">
+                                  <div className="flex justify-between gap-3">
+                                    <dt className="text-gray-400">Account name</dt>
+                                    <dd className="font-semibold text-ink">
+                                      {payInfo.gcash.accountName || "—"}
+                                    </dd>
+                                  </div>
+                                  <div className="flex justify-between gap-3">
+                                    <dt className="text-gray-400">GCash number</dt>
+                                    <dd className="font-semibold text-ink">
+                                      {payInfo.gcash.accountNumber}
+                                    </dd>
+                                  </div>
+                                  {payInfo.gcash.notes && (
+                                    <p className="pt-1 text-gray-500">{payInfo.gcash.notes}</p>
+                                  )}
+                                  <p className="pt-1 text-gray-400">
+                                    Send your payment to this account — we&apos;ll
+                                    confirm it and mark your order as paid.
+                                  </p>
+                                </dl>
+                              ) : (
+                                <p>
+                                  Our team will send the GCash payment details
+                                  after you place your order.
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          {paymentMethod === m && m === "bank_transfer" && (
+                            <div className="mt-1.5 rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-3 text-xs text-gray-600">
+                              {payInfo?.bank.accountNumber ? (
+                                <dl className="space-y-1">
+                                  <div className="flex justify-between gap-3">
+                                    <dt className="text-gray-400">Bank</dt>
+                                    <dd className="font-semibold text-ink">
+                                      {payInfo.bank.bankName || "—"}
+                                    </dd>
+                                  </div>
+                                  <div className="flex justify-between gap-3">
+                                    <dt className="text-gray-400">Account name</dt>
+                                    <dd className="font-semibold text-ink">
+                                      {payInfo.bank.accountName || "—"}
+                                    </dd>
+                                  </div>
+                                  <div className="flex justify-between gap-3">
+                                    <dt className="text-gray-400">Account number</dt>
+                                    <dd className="font-semibold text-ink">
+                                      {payInfo.bank.accountNumber}
+                                    </dd>
+                                  </div>
+                                  {payInfo.bank.notes && (
+                                    <p className="pt-1 text-gray-500">{payInfo.bank.notes}</p>
+                                  )}
+                                  <p className="pt-1 text-gray-400">
+                                    Transfer your payment to this account —
+                                    we&apos;ll confirm it and mark your order as paid.
+                                  </p>
+                                </dl>
+                              ) : (
+                                <p>
+                                  Our team will send the bank transfer details
+                                  after you place your order.
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       ))}
                     </div>
                   </div>

@@ -50,6 +50,13 @@
       "when": 1781171979887,
       "tag": "0006_neat_thaddeus_ross",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1781172874653,
+      "tag": "0007_typical_rogue",
+      "breakpoints": true
     }
   ]
 }

@@ -7,6 +7,7 @@ import {
   formatDate,
   formatPrice,
   PAYMENT_LABELS,
+  type PaymentInfo,
   type PaymentMethod,
   type Quote,
 } from "@/lib/types";
@@ -72,19 +73,60 @@ export default function AdminOrdersPage() {
   const [openOrderId, setOpenOrderId] = useState<string | null>(null);
   const [openQuoteId, setOpenQuoteId] = useState<string | null>(null);
 
+  const [payInfo, setPayInfo] = useState<PaymentInfo | null>(null);
+  const [savingPayInfo, setSavingPayInfo] = useState(false);
+  const [payInfoMsg, setPayInfoMsg] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
+
   useEffect(() => {
     Promise.all([
       authedFetch<AdminOrder[]>("/api/orders/all?limit=200"),
       authedFetch<Quote[]>("/api/quotes?limit=100"),
+      authedFetch<PaymentInfo>("/api/settings/payment-info"),
     ])
-      .then(([o, q]) => {
+      .then(([o, q, p]) => {
         setOrders(o);
         setQuotes(q);
+        setPayInfo(p);
       })
       .catch((err) =>
         setError(err instanceof Error ? err.message : "Failed to load"),
       );
   }, [authedFetch]);
+
+  function updatePayInfo<S extends keyof PaymentInfo>(
+    section: S,
+    key: keyof PaymentInfo[S],
+    value: string,
+  ) {
+    setPayInfo((p) =>
+      p ? { ...p, [section]: { ...p[section], [key]: value } } : p,
+    );
+  }
+
+  async function savePayInfo(e: React.FormEvent) {
+    e.preventDefault();
+    if (!payInfo) return;
+    setPayInfoMsg(null);
+    setSavingPayInfo(true);
+    try {
+      const saved = await authedFetch<PaymentInfo>("/api/settings/payment-info", {
+        method: "PUT",
+        body: JSON.stringify(payInfo),
+      });
+      setPayInfo(saved);
+      setPayInfoMsg({
+        kind: "ok",
+        text: "Saved — customers now see the updated details at checkout.",
+      });
+    } catch (err) {
+      setPayInfoMsg({
+        kind: "error",
+        text: err instanceof Error ? err.message : "Save failed",
+      });
+    } finally {
+      setSavingPayInfo(false);
+    }
+  }
 
   const filtered = useMemo(() => {
     if (!orders) return [];
@@ -305,6 +347,137 @@ export default function AdminOrdersPage() {
             </table>
           )}
         </div>
+      </section>
+
+      {/* ---- Payment Information ---- */}
+      <section className="animate-fade-up delay-3 mt-12">
+        <h2 className="font-display text-lg font-extrabold tracking-tight text-ink">
+          Payment Information
+        </h2>
+        <p className="mt-1 text-sm text-gray-500">
+          These details are shown to customers at checkout when they choose
+          GCash or Bank Transfer. Changes apply immediately.
+        </p>
+
+        {payInfoMsg && (
+          <div
+            className={`mt-4 rounded-lg px-4 py-2.5 text-sm ${
+              payInfoMsg.kind === "error"
+                ? "border border-brand/20 bg-brand/5 text-brand"
+                : "border border-green-200 bg-green-50 text-green-700"
+            }`}
+          >
+            {payInfoMsg.text}
+          </div>
+        )}
+
+        {!payInfo ? (
+          <div className="mt-4 h-48 animate-pulse rounded-2xl bg-gray-100" />
+        ) : (
+          <form
+            onSubmit={savePayInfo}
+            className="mt-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"
+          >
+            <div className="grid gap-8 md:grid-cols-2">
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400">
+                  GCash
+                </h3>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                    Account name
+                  </label>
+                  <input
+                    value={payInfo.gcash.accountName}
+                    onChange={(e) => updatePayInfo("gcash", "accountName", e.target.value)}
+                    className={`${field} w-full`}
+                    placeholder="e.g. Limdaqui Trading Inc."
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                    GCash number
+                  </label>
+                  <input
+                    value={payInfo.gcash.accountNumber}
+                    onChange={(e) => updatePayInfo("gcash", "accountNumber", e.target.value)}
+                    className={`${field} w-full`}
+                    placeholder="09xx xxx xxxx"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                    Notes <span className="text-gray-400">(optional)</span>
+                  </label>
+                  <input
+                    value={payInfo.gcash.notes}
+                    onChange={(e) => updatePayInfo("gcash", "notes", e.target.value)}
+                    className={`${field} w-full`}
+                    placeholder="e.g. Send a screenshot of the receipt to our email"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400">
+                  Bank Transfer
+                </h3>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                    Bank name
+                  </label>
+                  <input
+                    value={payInfo.bank.bankName}
+                    onChange={(e) => updatePayInfo("bank", "bankName", e.target.value)}
+                    className={`${field} w-full`}
+                    placeholder="e.g. BDO"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                    Account name
+                  </label>
+                  <input
+                    value={payInfo.bank.accountName}
+                    onChange={(e) => updatePayInfo("bank", "accountName", e.target.value)}
+                    className={`${field} w-full`}
+                    placeholder="e.g. Limdaqui Trading Inc."
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                    Account number
+                  </label>
+                  <input
+                    value={payInfo.bank.accountNumber}
+                    onChange={(e) => updatePayInfo("bank", "accountNumber", e.target.value)}
+                    className={`${field} w-full`}
+                    placeholder="xxxx-xxxx-xxxx"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                    Notes <span className="text-gray-400">(optional)</span>
+                  </label>
+                  <input
+                    value={payInfo.bank.notes}
+                    onChange={(e) => updatePayInfo("bank", "notes", e.target.value)}
+                    className={`${field} w-full`}
+                    placeholder="e.g. Use the order ID as the transfer reference"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={savingPayInfo}
+              className="mt-6 rounded-full bg-brand px-6 py-2.5 text-sm font-bold text-white transition hover:bg-brand-600 disabled:opacity-50"
+            >
+              {savingPayInfo ? "Saving…" : "Save payment information"}
+            </button>
+          </form>
+        )}
       </section>
 
       {/* ---- Quotations ---- */}

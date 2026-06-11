@@ -7,6 +7,7 @@ import imageRoutes from "./images.routes.js";
 import orderRoutes from "./orders.routes.js";
 import productRoutes from "./products.routes.js";
 import quoteRoutes from "./quotes.routes.js";
+import settingsRoutes from "./settings.routes.js";
 import userRoutes from "./users.routes.js";
 
 const router = Router();
@@ -18,6 +19,7 @@ router.use("/images", imageRoutes);
 router.use("/orders", orderRoutes);
 router.use("/products", productRoutes);
 router.use("/quotes", quoteRoutes);
+router.use("/settings", settingsRoutes);
 router.use("/users", userRoutes);
 
 export default router;

@@ -37,6 +37,16 @@ export const PAYMENT_LABELS: Record<PaymentMethod, string> = {
   bank_transfer: "Bank Transfer",
 };
 
+export type PaymentInfo = {
+  gcash: { accountName: string; accountNumber: string; notes: string };
+  bank: {
+    bankName: string;
+    accountName: string;
+    accountNumber: string;
+    notes: string;
+  };
+};
+
 export type Order = {
   id: string;
   status: "pending" | "paid" | "shipped" | "delivered" | "cancelled";

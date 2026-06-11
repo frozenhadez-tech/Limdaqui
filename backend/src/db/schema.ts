@@ -110,6 +110,13 @@ export const quotes = pgTable("quotes", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// Site-wide key/value settings (JSON values), e.g. payment instructions.
+export const settings = pgTable("settings", {
+  key: varchar("key", { length: 120 }).primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 // Uploaded product images, served via GET /api/images/:id. Stored in the DB
 // because Cloud Run instances have no persistent filesystem.
 export const productImages = pgTable("product_images", {
