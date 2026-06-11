@@ -7,7 +7,6 @@ import { orderItems, orders, products, users } from "../db/schema.js";
 import {
   requireAuth,
   requireBackOffice,
-  requireManager,
   type AuthedRequest,
 } from "../middleware/auth.js";
 import { HttpError } from "../middleware/errorHandler.js";
@@ -196,11 +195,11 @@ const statusSchema = z.object({
   status: z.enum(["pending", "paid", "shipped", "delivered", "cancelled"]),
 });
 
-// PATCH /api/orders/:id/status — update an order's status (manager and up)
+// PATCH /api/orders/:id/status — update an order's status (staff and up)
 router.patch(
   "/:id/status",
   requireAuth,
-  requireManager,
+  requireBackOffice,
   async (req, res, next) => {
     try {
       const id = z.string().uuid("invalid order id").parse(req.params.id);

@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { useAuth } from "@/lib/auth";
 import {
   formatDate,
   formatPrice,
@@ -60,9 +59,6 @@ function StatusPill({ status }: { status: OrderStatus }) {
 
 export default function AdminOrdersPage() {
   const authedFetch = useAuthedFetch();
-  const { user: me } = useAuth();
-  // Staff can view orders; managers and admins update statuses.
-  const canUpdate = me?.role === "admin" || me?.role === "manager";
 
   const [orders, setOrders] = useState<AdminOrder[] | null>(null);
   const [quotes, setQuotes] = useState<Quote[] | null>(null);
@@ -70,7 +66,7 @@ export default function AdminOrdersPage() {
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | OrderStatus>("all");
-  const [openOrderId, setOpenOrderId] = useState<string | null>(null);
+  const [viewing, setViewing] = useState<AdminOrder | null>(null);
   const [openQuoteId, setOpenQuoteId] = useState<string | null>(null);
 
   const [payInfo, setPayInfo] = useState<PaymentInfo | null>(null);
@@ -154,6 +150,7 @@ export default function AdminOrdersPage() {
           o.id === id ? { ...o, status: updated.status } : o,
         ) ?? null,
       );
+      setViewing((v) => (v && v.id === id ? { ...v, status: updated.status } : v));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Status update failed");
     }
@@ -247,102 +244,52 @@ export default function AdminOrdersPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {filtered.map((o) => {
-                  const open = openOrderId === o.id;
-                  return [
-                    <tr key={o.id} className="transition hover:bg-gray-50">
-                      <td className="px-6 py-3">
-                        <button
-                          onClick={() => setOpenOrderId(open ? null : o.id)}
-                          title={open ? "Hide order items" : "Show order items"}
-                          className="font-mono text-xs font-semibold text-ink hover:text-brand"
-                        >
-                          #{o.id.slice(0, 8)}
-                        </button>
-                        <p className="mt-0.5 text-xs text-gray-400">
-                          {formatDate(o.createdAt)}
-                        </p>
-                      </td>
-                      <td className="px-4 py-3">
-                        <p className="font-semibold text-ink">
-                          {o.customerName ?? "—"}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {o.customerEmail ?? "deleted account"}
-                        </p>
-                      </td>
-                      <td className="px-4 py-3 font-bold text-ink">
-                        {formatPrice(o.totalCents, o.currency)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <StatusPill status={o.status} />
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        {canUpdate ? (
-                          <select
-                            value={o.status}
-                            onChange={(e) =>
-                              updateStatus(o.id, e.target.value as OrderStatus)
-                            }
-                            className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-semibold capitalize outline-none transition focus:border-brand"
-                            aria-label={`Update status of order ${o.id.slice(0, 8)}`}
-                          >
-                            {STATUSES.map((s) => (
-                              <option key={s} value={s}>
-                                {s.charAt(0).toUpperCase() + s.slice(1)}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <span
-                            className="text-xs text-gray-300"
-                            title="Managers and admins can update order status"
-                          >
-                            view only
-                          </span>
-                        )}
-                      </td>
-                    </tr>,
-                    open ? (
-                      <tr key={`${o.id}-items`} className="bg-gray-50/60">
-                        <td colSpan={5} className="px-6 py-4">
-                          <div className="mb-3 flex flex-wrap gap-x-8 gap-y-1 text-xs text-gray-500">
-                            <span>
-                              <span className="font-semibold text-gray-600">Payment:</span>{" "}
-                              {PAYMENT_LABELS[o.paymentMethod] ?? o.paymentMethod}
-                            </span>
-                            <span>
-                              <span className="font-semibold text-gray-600">Deliver to:</span>{" "}
-                              {o.shippingAddress ?? "—"}
-                              {o.shippingPhone ? ` · ${o.shippingPhone}` : ""}
-                            </span>
-                          </div>
-                          <ul className="space-y-1">
-                            {o.items.map((item, i) => (
-                              <li
-                                key={i}
-                                className="flex justify-between text-sm text-gray-600"
-                              >
-                                <span>
-                                  {item.name ?? "Removed product"}{" "}
-                                  <span className="text-gray-400">
-                                    × {item.quantity}
-                                  </span>
-                                </span>
-                                <span>
-                                  {formatPrice(
-                                    item.unitPriceCents * item.quantity,
-                                    o.currency,
-                                  )}
-                                </span>
-                              </li>
-                            ))}
-                          </ul>
-                        </td>
-                      </tr>
-                    ) : null,
-                  ];
-                })}
+                {filtered.map((o) => (
+                  <tr key={o.id} className="transition hover:bg-gray-50">
+                    <td className="px-6 py-3">
+                      <button
+                        onClick={() => setViewing(o)}
+                        title="View full order details"
+                        className="font-mono text-xs font-semibold text-brand underline-offset-2 hover:underline"
+                      >
+                        #{o.id.slice(0, 8)}
+                      </button>
+                      <p className="mt-0.5 text-xs text-gray-400">
+                        {formatDate(o.createdAt)}
+                      </p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="font-semibold text-ink">
+                        {o.customerName ?? "—"}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {o.customerEmail ?? "deleted account"}
+                      </p>
+                    </td>
+                    <td className="px-4 py-3 font-bold text-ink">
+                      {formatPrice(o.totalCents, o.currency)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatusPill status={o.status} />
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <select
+                        value={o.status}
+                        onChange={(e) =>
+                          updateStatus(o.id, e.target.value as OrderStatus)
+                        }
+                        className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-semibold capitalize outline-none transition focus:border-brand"
+                        aria-label={`Update status of order ${o.id.slice(0, 8)}`}
+                      >
+                        {STATUSES.map((s) => (
+                          <option key={s} value={s}>
+                            {s.charAt(0).toUpperCase() + s.slice(1)}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           )}
@@ -581,6 +528,122 @@ export default function AdminOrdersPage() {
           )}
         </div>
       </section>
+
+      {/* ---- Order details popup ---- */}
+      {viewing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
+          <div
+            className="animate-fade-in absolute inset-0 bg-ink/40 backdrop-blur-[2px]"
+            onClick={() => setViewing(null)}
+          />
+          <div className="animate-fade-up relative max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-7 shadow-2xl">
+            <div className="flex items-start justify-between">
+              <div>
+                <h2 className="font-display text-lg font-extrabold tracking-tight text-ink">
+                  Order <span className="font-mono">#{viewing.id.slice(0, 8)}</span>
+                </h2>
+                <p className="mt-0.5 text-xs text-gray-400">
+                  {formatDate(viewing.createdAt)} · ref{" "}
+                  <span className="font-mono">{viewing.id}</span>
+                </p>
+              </div>
+              <button
+                onClick={() => setViewing(null)}
+                className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-ink"
+                aria-label="Close"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path
+                    d="M6 6l12 12M18 6 6 18"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <dl className="mt-5 space-y-2.5 border-t border-gray-100 pt-4 text-sm">
+              <div className="flex justify-between gap-4">
+                <dt className="text-gray-400">Customer</dt>
+                <dd className="text-right font-semibold text-ink">
+                  {viewing.customerName ?? "—"}
+                </dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-gray-400">Email</dt>
+                <dd className="text-right text-gray-700">
+                  {viewing.customerEmail ?? "deleted account"}
+                </dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-gray-400">Payment method</dt>
+                <dd className="text-right font-semibold text-ink">
+                  {PAYMENT_LABELS[viewing.paymentMethod] ?? viewing.paymentMethod}
+                </dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="shrink-0 text-gray-400">Deliver to</dt>
+                <dd className="text-right text-gray-700">
+                  {viewing.shippingAddress ?? "—"}
+                </dd>
+              </div>
+              {viewing.shippingPhone && (
+                <div className="flex justify-between gap-4">
+                  <dt className="text-gray-400">Contact number</dt>
+                  <dd className="text-right text-gray-700">{viewing.shippingPhone}</dd>
+                </div>
+              )}
+            </dl>
+
+            <div className="mt-4 border-t border-gray-100 pt-4">
+              <p className="text-xs font-bold uppercase tracking-wider text-gray-400">
+                Items
+              </p>
+              <ul className="mt-2 space-y-1.5">
+                {viewing.items.map((item, i) => (
+                  <li key={i} className="flex justify-between text-sm text-gray-700">
+                    <span>
+                      {item.name ?? "Removed product"}{" "}
+                      <span className="text-gray-400">× {item.quantity}</span>
+                    </span>
+                    <span>
+                      {formatPrice(item.unitPriceCents * item.quantity, viewing.currency)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-3 flex justify-between border-t border-gray-100 pt-3 text-sm">
+                <span className="font-bold text-ink">Total</span>
+                <span className="font-bold text-ink">
+                  {formatPrice(viewing.totalCents, viewing.currency)}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-4 flex items-center justify-between gap-4 border-t border-gray-100 pt-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-ink">Status</span>
+                <StatusPill status={viewing.status} />
+              </div>
+              <select
+                value={viewing.status}
+                onChange={(e) =>
+                  updateStatus(viewing.id, e.target.value as OrderStatus)
+                }
+                className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold capitalize outline-none transition focus:border-brand"
+                aria-label="Update order status"
+              >
+                {STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {s.charAt(0).toUpperCase() + s.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
