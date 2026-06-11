@@ -24,7 +24,7 @@ const BACK_OFFICE_ROLES = ["admin", "manager", "staff"];
 
 const NAV = [
   { href: "/admin", label: "Overview", d: "M4 13h6V4H4v9Zm10 7h6v-9h-6v9ZM4 20h6v-4H4v4Zm10-12h6V4h-6v4Z" },
-  { href: "/admin/quotes", label: "Quotations", d: "M21 12a8 8 0 0 1-11.6 7.1L4 20l1-5.1A8 8 0 1 1 21 12Z" },
+  { href: "/admin/orders", label: "Order Management", d: "M9 6V4a3 3 0 0 1 6 0v2m-9.5 0h13l1 14a1 1 0 0 1-1 1h-13a1 1 0 0 1-1-1l1-14Z" },
   { href: "/admin/products", label: "Products", d: "M3.5 8 12 3l8.5 5v8L12 21l-8.5-5V8Zm0 0L12 13l8.5-5M12 13v8" },
   { href: "/admin/categories", label: "Categories", d: "M4 7h16M4 12h16M4 17h10" },
   {

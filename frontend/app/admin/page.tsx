@@ -16,7 +16,7 @@ type Stats = {
 };
 
 const STAT_CARDS = [
-  { key: "quotes", label: "Quotation requests", href: "/admin/quotes" },
+  { key: "quotes", label: "Quotation requests", href: "/admin/orders" },
   { key: "products", label: "Products listed", href: "/admin/products" },
   { key: "categories", label: "Categories", href: "/admin/categories" },
 ] as const;
@@ -89,7 +89,7 @@ export default function AdminOverviewPage() {
             Latest quotation requests
           </h2>
           <Link
-            href="/admin/quotes"
+            href="/admin/orders"
             className="text-sm font-semibold text-brand hover:underline"
           >
             View all
@@ -113,7 +113,7 @@ export default function AdminOverviewPage() {
               {stats.recentQuotes.map((q) => (
                 <li key={q.id}>
                   <Link
-                    href="/admin/quotes"
+                    href="/admin/orders"
                     className="flex items-center gap-4 px-6 py-4 transition hover:bg-gray-50"
                   >
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink font-display text-sm font-bold text-white">

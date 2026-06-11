@@ -31,7 +31,7 @@ a `title` tooltip and `aria-label`; menus close on Escape and outside-click.
 | `/admin` | `GET /api/products`, `GET /api/categories`, `GET /api/quotes` | all |
 | `/admin/products` | products CRUD (admin); `POST /api/images` for uploads, served via `GET /api/images/:id` | `products`, `product_images` |
 | `/admin/categories` | `GET/POST /api/categories` (POST admin) | `categories` |
-| `/admin/quotes` | `GET /api/quotes` (admin, paginated) | `quotes` |
+| `/admin/orders` | `GET /api/orders/all` (staff+), `PATCH /api/orders/:id/status` (manager+), `GET /api/quotes` (staff+) | `orders`, `order_items`, `users`, `quotes` |
 | `/admin/users` | `GET/POST /api/users`, `PATCH/DELETE /api/users/:id` (all admin) | `users` |
 
 ## Cart & orders workflow
