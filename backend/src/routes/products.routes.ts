@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { db } from "../db/index.js";
 import { categories, products } from "../db/schema.js";
+import { requireAdmin, requireAuth } from "../middleware/auth.js";
 import { HttpError } from "../middleware/errorHandler.js";
 
 const router = Router();
@@ -88,8 +89,8 @@ router.get("/:id", async (req, res, next) => {
   }
 });
 
-// POST /api/products
-router.post("/", async (req, res, next) => {
+// POST /api/products (admin)
+router.post("/", requireAuth, requireAdmin, async (req, res, next) => {
   try {
     const data = productInput.parse(req.body);
     const [row] = await db.insert(products).values(data).returning();
@@ -99,8 +100,8 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-// PATCH /api/products/:id
-router.patch("/:id", async (req, res, next) => {
+// PATCH /api/products/:id (admin)
+router.patch("/:id", requireAuth, requireAdmin, async (req, res, next) => {
   try {
     const id = idParam.parse(req.params.id);
     const data = productInput.partial().parse(req.body);
@@ -118,8 +119,8 @@ router.patch("/:id", async (req, res, next) => {
   }
 });
 
-// DELETE /api/products/:id
-router.delete("/:id", async (req, res, next) => {
+// DELETE /api/products/:id (admin)
+router.delete("/:id", requireAuth, requireAdmin, async (req, res, next) => {
   try {
     const id = idParam.parse(req.params.id);
     const [row] = await db

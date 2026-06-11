@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+
+import { useAuth } from "@/lib/auth";
 
 import { Logo } from "./Logo";
 
@@ -31,6 +35,8 @@ function ShopIcon() {
 }
 
 export function Header() {
+  const { user, logout, loading } = useAuth();
+
   return (
     <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/90 backdrop-blur-md">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
@@ -64,20 +70,36 @@ export function Header() {
 
           <div className="hidden h-6 w-px bg-gray-200 md:block" />
 
-          <div className="flex items-center gap-3">
-            <Link
-              href="/login"
-              className="text-sm font-medium text-gray-700 transition-colors hover:text-brand"
-            >
-              Login
-            </Link>
-            <Link
-              href="/register"
-              className="rounded-full bg-brand px-5 py-2 text-sm font-bold text-white shadow-sm shadow-brand/20 transition-colors hover:bg-brand-600"
-            >
-              Register
-            </Link>
-          </div>
+          {loading ? (
+            <div className="h-9 w-24 animate-pulse rounded-full bg-gray-100" />
+          ) : user ? (
+            <div className="flex items-center gap-3">
+              <span className="hidden text-sm font-medium text-gray-700 sm:inline">
+                Hi, {user.fullName?.split(" ")[0] ?? user.email.split("@")[0]}
+              </span>
+              <button
+                onClick={logout}
+                className="rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-brand hover:text-brand"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <Link
+                href="/login"
+                className="text-sm font-medium text-gray-700 transition-colors hover:text-brand"
+              >
+                Login
+              </Link>
+              <Link
+                href="/register"
+                className="rounded-full bg-brand px-5 py-2 text-sm font-bold text-white shadow-sm shadow-brand/20 transition-colors hover:bg-brand-600"
+              >
+                Register
+              </Link>
+            </div>
+          )}
         </nav>
       </div>
     </header>

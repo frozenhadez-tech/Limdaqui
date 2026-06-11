@@ -16,6 +16,12 @@ export const env = {
     .map((origin) => origin.trim())
     .filter(Boolean),
   databaseUrl: required("DATABASE_URL"),
+  jwtSecret: required(
+    "JWT_SECRET",
+    process.env.NODE_ENV === "production"
+      ? undefined
+      : "dev-only-insecure-secret-change-me",
+  ),
 } as const;
 
 export const isProduction = env.nodeEnv === "production";
