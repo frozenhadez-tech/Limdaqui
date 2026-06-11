@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { API_URL } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import {
   formatDate,
   formatPrice,
@@ -59,6 +61,7 @@ function StatusPill({ status }: { status: OrderStatus }) {
 
 export default function AdminOrdersPage() {
   const authedFetch = useAuthedFetch();
+  const { token } = useAuth();
 
   const [orders, setOrders] = useState<AdminOrder[] | null>(null);
   const [quotes, setQuotes] = useState<Quote[] | null>(null);
@@ -137,6 +140,26 @@ export default function AdminOrdersPage() {
       );
     });
   }, [orders, search, statusFilter]);
+
+  async function downloadAttachment(q: Quote) {
+    setError(null);
+    try {
+      // Authorized fetch -> blob -> anchor; a plain href can't carry the token.
+      const res = await fetch(`${API_URL}/api/quotes/${q.id}/attachment`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error(`Download failed (${res.status})`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = q.attachmentName ?? "attachment";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Download failed");
+    }
+  }
 
   async function updateStatus(id: string, status: OrderStatus) {
     setError(null);
@@ -471,12 +494,30 @@ export default function AdminOrdersPage() {
                         {q.name.charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-bold text-ink">
+                        <p className="flex items-center gap-1.5 truncate text-sm font-bold text-ink">
                           {q.name}
                           {q.company && (
                             <span className="font-medium text-gray-400">
                               {" "}· {q.company}
                             </span>
+                          )}
+                          {q.attachmentId && (
+                            <svg
+                              width="13"
+                              height="13"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              aria-label="Has attachment"
+                              className="shrink-0 text-gray-400"
+                            >
+                              <path
+                                d="m21 12-8.5 8.5a5 5 0 0 1-7-7L14 5a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L16 7"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
                           )}
                         </p>
                         <p className={`text-sm text-gray-500 ${open ? "" : "truncate"}`}>
@@ -516,6 +557,15 @@ export default function AdminOrdersPage() {
                           >
                             Reply by email →
                           </a>
+                          {q.attachmentId && (
+                            <button
+                              onClick={() => downloadAttachment(q)}
+                              title={`Download ${q.attachmentName}`}
+                              className="font-bold text-ink underline-offset-2 hover:underline"
+                            >
+                              📎 {q.attachmentName}
+                            </button>
+                          )}
                           <span>{q.email}</span>
                           {q.phone && <span>{q.phone}</span>}
                         </div>

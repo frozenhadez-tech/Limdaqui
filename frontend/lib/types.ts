@@ -67,6 +67,8 @@ export type Quote = {
   phone: string | null;
   message: string;
   createdAt: string;
+  attachmentId: string | null;
+  attachmentName: string | null;
 };
 
 export function formatPrice(cents: number, currency = "USD"): string {
