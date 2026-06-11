@@ -20,7 +20,12 @@ const bytea = customType<{ data: Buffer }>({
 // ---------------------------------------------------------------------------
 // Enums
 // ---------------------------------------------------------------------------
-export const userRole = pgEnum("user_role", ["customer", "admin"]);
+export const userRole = pgEnum("user_role", [
+  "customer",
+  "staff",
+  "manager",
+  "admin",
+]);
 export const userStatus = pgEnum("user_status", ["active", "suspended"]);
 export const orderStatus = pgEnum("order_status", [
   "pending",

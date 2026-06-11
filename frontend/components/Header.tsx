@@ -91,7 +91,7 @@ export function Header() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isAdmin = user?.role === "admin";
+  const isAdmin = ["admin", "manager", "staff"].includes(user?.role ?? "");
 
   // Close the menu on Escape.
   useEffect(() => {
@@ -161,7 +161,7 @@ export function Header() {
             <>
               <div className="leading-tight">
                 <p className="text-sm font-bold text-ink">
-                  {user.fullName ?? (isAdmin ? "Admin User" : "Customer")}
+                  {user.fullName ?? user.email.split("@")[0]}
                 </p>
                 <p className="text-xs text-gray-500">{user.email}</p>
               </div>
@@ -227,7 +227,7 @@ export function Header() {
               <div className="flex items-center justify-between">
                 <div className="leading-tight">
                   <p className="text-sm font-bold text-ink">
-                    {user.fullName ?? (isAdmin ? "Admin User" : "Customer")}
+                    {user.fullName ?? user.email.split("@")[0]}
                   </p>
                   <p className="text-xs text-gray-500">{user.email}</p>
                 </div>

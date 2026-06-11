@@ -20,12 +20,20 @@ function Icon({ d }: { d: string }) {
   );
 }
 
+const BACK_OFFICE_ROLES = ["admin", "manager", "staff"];
+
 const NAV = [
   { href: "/admin", label: "Overview", d: "M4 13h6V4H4v9Zm10 7h6v-9h-6v9ZM4 20h6v-4H4v4Zm10-12h6V4h-6v4Z" },
   { href: "/admin/quotes", label: "Quotations", d: "M21 12a8 8 0 0 1-11.6 7.1L4 20l1-5.1A8 8 0 1 1 21 12Z" },
   { href: "/admin/products", label: "Products", d: "M3.5 8 12 3l8.5 5v8L12 21l-8.5-5V8Zm0 0L12 13l8.5-5M12 13v8" },
   { href: "/admin/categories", label: "Categories", d: "M4 7h16M4 12h16M4 17h10" },
-  { href: "/admin/users", label: "User Management", d: "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 9a7 7 0 0 1 14 0M16.5 3.5a4 4 0 0 1 0 7M22 20a7 7 0 0 0-5-6.7" },
+  {
+    href: "/admin/users",
+    label: "User Management",
+    d: "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 9a7 7 0 0 1 14 0M16.5 3.5a4 4 0 0 1 0 7M22 20a7 7 0 0 0-5-6.7",
+    roles: ["admin", "manager"],
+  },
+  { href: "/admin/reports", label: "Reports", d: "M5 21V9m7 12V3m7 18v-7" },
 ];
 
 function GatePanel({
@@ -78,15 +86,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (user.role !== "admin") {
+  if (!BACK_OFFICE_ROLES.includes(user.role)) {
     return (
       <GatePanel
         title="No access"
-        body="This area is reserved for Limdaqui administrators."
+        body="This area is reserved for Limdaqui staff."
         cta={{ href: "/", label: "Back to the store" }}
       />
     );
   }
+
+  const navItems = NAV.filter((item) => !item.roles || item.roles.includes(user.role));
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50 md:flex-row">
@@ -115,7 +125,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         <nav className="relative flex gap-1 overflow-x-auto px-3 pb-4 md:flex-col md:overflow-visible">
-          {NAV.map((item) => {
+          {navItems.map((item) => {
             const active =
               item.href === "/admin"
                 ? pathname === "/admin"
@@ -147,7 +157,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {user.fullName ?? user.email}
           </p>
           <p className="mt-0.5 text-[0.65rem] uppercase tracking-[0.18em] text-white/40">
-            Administrator
+            {user.role}
           </p>
           <div className="mt-3 flex items-center gap-4 text-xs font-medium">
             <Link href="/" className="text-white/60 transition hover:text-white">

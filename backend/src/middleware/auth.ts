@@ -26,15 +26,22 @@ export function requireAuth(
   }
 }
 
-/** Require the authenticated user to have the admin role. */
-export function requireAdmin(
-  req: AuthedRequest,
-  _res: Response,
-  next: NextFunction,
-): void {
-  if (req.user?.role !== "admin") {
-    next(new HttpError(403, "Admin access required"));
-    return;
-  }
-  next();
+/** Require the authenticated user to have one of the given roles. */
+export function requireRole(...roles: string[]) {
+  return (req: AuthedRequest, _res: Response, next: NextFunction): void => {
+    if (!roles.includes(req.user?.role ?? "")) {
+      next(new HttpError(403, "Insufficient permissions"));
+      return;
+    }
+    next();
+  };
 }
+
+/** Admin only: deletions and admin-account management. */
+export const requireAdmin = requireRole("admin");
+
+/** Admin or manager: edits and user management. */
+export const requireManager = requireRole("admin", "manager");
+
+/** Any back-office role: viewing, creating, and reports. */
+export const requireBackOffice = requireRole("admin", "manager", "staff");

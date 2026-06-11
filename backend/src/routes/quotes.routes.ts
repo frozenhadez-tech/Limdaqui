@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { db } from "../db/index.js";
 import { quotes } from "../db/schema.js";
-import { requireAdmin, requireAuth } from "../middleware/auth.js";
+import { requireAuth, requireBackOffice } from "../middleware/auth.js";
 import { quoteLimiter } from "../middleware/rateLimit.js";
 
 const router = Router();
@@ -28,8 +28,8 @@ router.post("/", quoteLimiter, async (req, res, next) => {
   }
 });
 
-// GET /api/quotes?limit=&offset= — list submissions (admin only)
-router.get("/", requireAuth, requireAdmin, async (req, res, next) => {
+// GET /api/quotes?limit=&offset= — list submissions (staff and up)
+router.get("/", requireAuth, requireBackOffice, async (req, res, next) => {
   try {
     const query = z
       .object({

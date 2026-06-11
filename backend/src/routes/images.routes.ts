@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import { db } from "../db/index.js";
 import { productImages } from "../db/schema.js";
-import { requireAdmin, requireAuth } from "../middleware/auth.js";
+import { requireAuth, requireBackOffice } from "../middleware/auth.js";
 import { HttpError } from "../middleware/errorHandler.js";
 
 const router = Router();
@@ -41,11 +41,11 @@ export async function deleteImage(id: string): Promise<void> {
   await db.delete(productImages).where(eq(productImages.id, id));
 }
 
-// POST /api/images — upload a product image (admin); multipart field "file"
+// POST /api/images — upload a product image (staff and up); field "file"
 router.post(
   "/",
   requireAuth,
-  requireAdmin,
+  requireBackOffice,
   upload.single("file"),
   async (req, res, next) => {
     try {

@@ -77,7 +77,10 @@ function StockPill({ stock }: { stock: number }) {
 
 export default function AdminProductsPage() {
   const authedFetch = useAuthedFetch();
-  const { token } = useAuth();
+  const { token, user: me } = useAuth();
+  // Staff can create products; only managers+ edit; only admins delete.
+  const canEdit = me?.role === "admin" || me?.role === "manager";
+  const canDelete = me?.role === "admin";
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [products, setProducts] = useState<Product[] | null>(null);
@@ -254,8 +257,9 @@ export default function AdminProductsPage() {
               {products.map((p) => (
                 <tr
                   key={p.id}
-                  onClick={() => openEditor(p)}
-                  className="cursor-pointer transition hover:bg-gray-50"
+                  onClick={() => canEdit && openEditor(p)}
+                  title={canEdit ? undefined : "Staff can create products but not edit them"}
+                  className={`transition hover:bg-gray-50 ${canEdit ? "cursor-pointer" : ""}`}
                 >
                   <td className="px-6 py-3">
                     <div className="flex items-center gap-3">
@@ -286,7 +290,9 @@ export default function AdminProductsPage() {
                   <td className="hidden px-4 py-3 sm:table-cell">
                     <StockPill stock={p.stock} />
                   </td>
-                  <td className="px-4 py-3 text-right text-gray-300">›</td>
+                  <td className="px-4 py-3 text-right text-gray-300">
+                    {canEdit ? "›" : ""}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -508,7 +514,7 @@ export default function AdminProductsPage() {
               >
                 Cancel
               </button>
-              {editing !== "new" && (
+              {editing !== "new" && canDelete && (
                 <button
                   onClick={() => (confirmDelete ? remove() : setConfirmDelete(true))}
                   disabled={saving}

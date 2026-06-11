@@ -8,14 +8,15 @@ import { hashPassword } from "../lib/auth.js";
 import {
   requireAdmin,
   requireAuth,
+  requireManager,
   type AuthedRequest,
 } from "../middleware/auth.js";
 import { HttpError } from "../middleware/errorHandler.js";
 
 const router = Router();
 
-// Everything here is admin-only.
-router.use(requireAuth, requireAdmin);
+// User management is for admins and managers (staff have no access).
+router.use(requireAuth, requireManager);
 
 const publicColumns = {
   id: users.id,
@@ -28,6 +29,8 @@ const publicColumns = {
 
 const idParam = z.string().uuid("invalid user id");
 
+const roleEnum = z.enum(["customer", "staff", "manager", "admin"]);
+
 const createUserSchema = z.object({
   email: z
     .string()
@@ -36,12 +39,12 @@ const createUserSchema = z.object({
     .transform((v) => v.toLowerCase()),
   password: z.string().min(8).max(200),
   fullName: z.string().min(1).max(255).optional(),
-  role: z.enum(["customer", "admin"]).default("customer"),
+  role: roleEnum.default("customer"),
 });
 
 const updateUserSchema = z.object({
   fullName: z.string().min(1).max(255).nullable().optional(),
-  role: z.enum(["customer", "admin"]).optional(),
+  role: roleEnum.optional(),
   status: z.enum(["active", "suspended"]).optional(),
   // Optional admin password reset.
   password: z.string().min(8).max(200).optional(),
@@ -80,9 +83,13 @@ router.get("/", async (req, res, next) => {
 });
 
 // POST /api/users — create a user
-router.post("/", async (req, res, next) => {
+router.post("/", async (req: AuthedRequest, res, next) => {
   try {
     const data = createUserSchema.parse(req.body);
+
+    if (req.user!.role === "manager" && data.role === "admin") {
+      throw new HttpError(403, "Managers cannot assign the admin role");
+    }
     const passwordHash = await hashPassword(data.password);
     const [row] = await db
       .insert(users)
@@ -105,13 +112,28 @@ router.patch("/:id", async (req: AuthedRequest, res, next) => {
     const id = idParam.parse(req.params.id);
     const data = updateUserSchema.parse(req.body);
 
-    // Don't let an admin lock themselves out.
+    // Don't let anyone lock themselves out.
     if (id === req.user!.sub) {
-      if (data.role === "customer") {
-        throw new HttpError(400, "You cannot remove your own admin role");
+      if (data.role && data.role !== req.user!.role) {
+        throw new HttpError(400, "You cannot change your own role");
       }
       if (data.status === "suspended") {
         throw new HttpError(400, "You cannot suspend your own account");
+      }
+    }
+
+    // Managers cannot touch admin accounts or hand out the admin role.
+    if (req.user!.role === "manager") {
+      const [target] = await db
+        .select({ role: users.role })
+        .from(users)
+        .where(eq(users.id, id));
+      if (!target) throw new HttpError(404, "User not found");
+      if (target.role === "admin") {
+        throw new HttpError(403, "Managers cannot modify admin accounts");
+      }
+      if (data.role === "admin") {
+        throw new HttpError(403, "Managers cannot assign the admin role");
       }
     }
 
@@ -132,8 +154,8 @@ router.patch("/:id", async (req: AuthedRequest, res, next) => {
   }
 });
 
-// DELETE /api/users/:id — delete a user (fails 409 if they have orders)
-router.delete("/:id", async (req: AuthedRequest, res, next) => {
+// DELETE /api/users/:id — admin only (fails 409 if they have orders)
+router.delete("/:id", requireAdmin, async (req: AuthedRequest, res, next) => {
   try {
     const id = idParam.parse(req.params.id);
     if (id === req.user!.sub) {

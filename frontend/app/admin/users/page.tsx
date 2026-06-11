@@ -9,11 +9,13 @@ import { useAuthedFetch } from "@/lib/useAuthedFetch";
 const field =
   "w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20";
 
+type Role = "customer" | "staff" | "manager" | "admin";
+
 type AdminUser = {
   id: string;
   email: string;
   fullName: string | null;
-  role: "customer" | "admin";
+  role: Role;
   status: "active" | "suspended";
   createdAt: string;
 };
@@ -22,7 +24,7 @@ type FormState = {
   fullName: string;
   email: string;
   password: string;
-  role: "customer" | "admin";
+  role: Role;
   status: "active" | "suspended";
 };
 
@@ -34,14 +36,19 @@ const EMPTY_FORM: FormState = {
   status: "active",
 };
 
-function RolePill({ role }: { role: AdminUser["role"] }) {
-  return role === "admin" ? (
-    <span className="rounded-full bg-ink px-2.5 py-1 text-xs font-semibold text-white">
-      Admin
-    </span>
-  ) : (
-    <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600">
-      Customer
+const ROLE_STYLES: Record<Role, string> = {
+  admin: "bg-ink text-white",
+  manager: "bg-indigo-50 text-indigo-600",
+  staff: "bg-blue-50 text-blue-600",
+  customer: "bg-gray-100 text-gray-600",
+};
+
+function RolePill({ role }: { role: Role }) {
+  return (
+    <span
+      className={`rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${ROLE_STYLES[role]}`}
+    >
+      {role}
     </span>
   );
 }
@@ -94,6 +101,13 @@ export default function AdminUsersPage() {
   }, [search, load]);
 
   const isSelf = editing !== "new" && editing !== null && editing.id === me?.id;
+  const meIsAdmin = me?.role === "admin";
+  // Managers cannot modify admin accounts.
+  const targetLocked = (u: AdminUser) =>
+    u.id === me?.id || (!meIsAdmin && u.role === "admin");
+  const assignableRoles: Role[] = meIsAdmin
+    ? ["customer", "staff", "manager", "admin"]
+    : ["customer", "staff", "manager"];
 
   function openEditor(target: AdminUser | "new") {
     setEditing(target);
@@ -270,13 +284,15 @@ export default function AdminUsersPage() {
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => toggleSuspend(u)}
-                        disabled={u.id === me?.id}
+                        disabled={targetLocked(u)}
                         title={
                           u.id === me?.id
                             ? "You cannot suspend your own account"
-                            : u.status === "active"
-                              ? `Suspend ${u.email}`
-                              : `Reactivate ${u.email}`
+                            : targetLocked(u)
+                              ? "Only admins can modify admin accounts"
+                              : u.status === "active"
+                                ? `Suspend ${u.email}`
+                                : `Reactivate ${u.email}`
                         }
                         className={`rounded-full px-3 py-1.5 text-xs font-semibold transition disabled:opacity-40 ${
                           u.status === "active"
@@ -288,8 +304,13 @@ export default function AdminUsersPage() {
                       </button>
                       <button
                         onClick={() => openEditor(u)}
-                        title={`Edit ${u.email}`}
-                        className="rounded-full px-3 py-1.5 text-xs font-semibold text-gray-600 transition hover:bg-gray-100 hover:text-ink"
+                        disabled={!meIsAdmin && u.role === "admin"}
+                        title={
+                          !meIsAdmin && u.role === "admin"
+                            ? "Only admins can modify admin accounts"
+                            : `Edit ${u.email}`
+                        }
+                        className="rounded-full px-3 py-1.5 text-xs font-semibold text-gray-600 transition hover:bg-gray-100 hover:text-ink disabled:opacity-40"
                       >
                         Edit
                       </button>
@@ -339,8 +360,8 @@ export default function AdminUsersPage() {
               )}
               {isSelf && (
                 <div className="rounded-lg bg-amber-50 px-4 py-2.5 text-xs text-amber-700">
-                  This is your own account — you cannot suspend it or remove
-                  its admin role.
+                  This is your own account — you cannot suspend it or change
+                  its role.
                 </div>
               )}
 
@@ -397,8 +418,11 @@ export default function AdminUsersPage() {
                     disabled={isSelf}
                     className={field}
                   >
-                    <option value="customer">Customer</option>
-                    <option value="admin">Admin</option>
+                    {assignableRoles.map((r) => (
+                      <option key={r} value={r}>
+                        {r.charAt(0).toUpperCase() + r.slice(1)}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 {editing !== "new" && (
@@ -444,7 +468,7 @@ export default function AdminUsersPage() {
               >
                 Cancel
               </button>
-              {editing !== "new" && !isSelf && (
+              {editing !== "new" && !isSelf && meIsAdmin && (
                 <button
                   onClick={() => (confirmDelete ? removeUser() : setConfirmDelete(true))}
                   disabled={saving}
