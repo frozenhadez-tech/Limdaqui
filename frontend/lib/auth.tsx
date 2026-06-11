@@ -14,6 +14,8 @@ export type User = {
   id: string;
   email: string;
   fullName: string | null;
+  phone: string | null;
+  address: string | null;
   role: string;
 };
 

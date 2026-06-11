@@ -37,6 +37,8 @@ type PublicUser = {
   id: string;
   email: string;
   fullName: string | null;
+  phone: string | null;
+  address: string | null;
   role: string;
 };
 
@@ -44,12 +46,16 @@ function toPublicUser(row: {
   id: string;
   email: string;
   fullName: string | null;
+  phone: string | null;
+  address: string | null;
   role: string;
 }): PublicUser {
   return {
     id: row.id,
     email: row.email,
     fullName: row.fullName,
+    phone: row.phone,
+    address: row.address,
     role: row.role,
   };
 }
@@ -129,7 +135,9 @@ router.get("/me", requireAuth, async (req: AuthedRequest, res, next) => {
 });
 
 const updateMeSchema = z.object({
-  fullName: z.string().min(1).max(255).nullable(),
+  fullName: z.string().min(1).max(255).nullable().optional(),
+  phone: z.string().max(60).nullable().optional(),
+  address: z.string().max(500).nullable().optional(),
 });
 
 // PATCH /api/auth/me — update profile details
@@ -138,7 +146,7 @@ router.patch("/me", requireAuth, async (req: AuthedRequest, res, next) => {
     const data = updateMeSchema.parse(req.body);
     const [row] = await db
       .update(users)
-      .set({ fullName: data.fullName, updatedAt: new Date() })
+      .set({ ...data, updatedAt: new Date() })
       .where(eq(users.id, req.user!.sub))
       .returning();
     if (!row) throw new HttpError(404, "User not found");

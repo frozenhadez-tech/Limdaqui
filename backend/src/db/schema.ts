@@ -43,6 +43,8 @@ export const users = pgTable("users", {
   email: varchar("email", { length: 255 }).notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   fullName: varchar("full_name", { length: 255 }),
+  phone: varchar("phone", { length: 60 }),
+  address: varchar("address", { length: 500 }),
   role: userRole("role").notNull().default("customer"),
   status: userStatus("status").notNull().default("active"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

@@ -36,6 +36,13 @@
       "when": 1781168480989,
       "tag": "0004_optimal_white_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1781171423364,
+      "tag": "0005_sturdy_silver_fox",
+      "breakpoints": true
     }
   ]
 }
