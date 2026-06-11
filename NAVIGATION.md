@@ -31,8 +31,18 @@ a `title` tooltip and `aria-label`; menus close on Escape and outside-click.
 | `/admin` | `GET /api/products`, `GET /api/categories`, `GET /api/quotes` | all |
 | `/admin/products` | products CRUD (admin); `POST /api/images` for uploads, served via `GET /api/images/:id` | `products`, `product_images` |
 | `/admin/categories` | `GET/POST /api/categories` (POST admin) | `categories` |
-| `/admin/orders` | `GET /api/orders/all` (staff+), `PATCH /api/orders/:id/status` (manager+), `GET /api/quotes` (staff+) | `orders`, `order_items`, `users`, `quotes` |
+| `/admin/orders` | `GET /api/orders/all` (staff+, supports from/to), `PATCH /api/orders/:id/status` (staff+), `GET/PUT /api/settings/payment-info`, `GET /api/quotes` (staff+) | `orders`, `order_items`, `users`, `quotes`, `settings` |
+| `/admin/reports` | `GET /api/orders/all`, `GET /api/products`, `GET /api/quotes`, `GET /api/users` | read-only CSV exports incl. period sales report |
 | `/admin/users` | `GET/POST /api/users`, `PATCH/DELETE /api/users/:id` (all admin) | `users` |
+
+## Checkout & payment
+
+Checkout requires a payment method (Cash on Delivery / GCash / Bank Transfer)
+and a delivery address (prefilled from the profile, snapshotted onto the
+order). GCash/bank account details shown to customers come from the
+`payment_info` settings record, editable by any back-office role under
+Order Management → Payment Information. Clicking an Order ID in Order
+Management opens a popup with full order details and a status selector.
 
 ## Cart & orders workflow
 
