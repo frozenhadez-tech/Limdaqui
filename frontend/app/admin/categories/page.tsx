@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { apiFetch } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { type Category } from "@/lib/types";
 import { useAuthedFetch } from "@/lib/useAuthedFetch";
 
@@ -18,6 +19,10 @@ function slugify(value: string): string {
 
 export default function AdminCategoriesPage() {
   const authedFetch = useAuthedFetch();
+  const { user: me } = useAuth();
+  // Staff can create categories; editing is for managers and admins.
+  const canEdit = me?.role === "admin" || me?.role === "manager";
+
   const [categories, setCategories] = useState<Category[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,6 +31,42 @@ export default function AdminCategoriesPage() {
   const [slugTouched, setSlugTouched] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editSlug, setEditSlug] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+
+  function startEdit(c: Category) {
+    setEditingId(c.id);
+    setEditName(c.name);
+    setEditSlug(c.slug);
+    setEditError(null);
+  }
+
+  async function saveEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingId) return;
+    setEditError(null);
+    setSavingEdit(true);
+    try {
+      const row = await authedFetch<Category>(`/api/categories/${editingId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ name: editName.trim(), slug: editSlug.trim() }),
+      });
+      setCategories((c) =>
+        (c ?? [])
+          .map((x) => (x.id === row.id ? row : x))
+          .sort((a, b) => a.name.localeCompare(b.name)),
+      );
+      setEditingId(null);
+    } catch (err) {
+      setEditError(err instanceof Error ? err.message : "Save failed");
+    } finally {
+      setSavingEdit(false);
+    }
+  }
 
   useEffect(() => {
     apiFetch<Category[]>("/api/categories")
@@ -86,15 +127,65 @@ export default function AdminCategoriesPage() {
             </p>
           ) : (
             <ul className="divide-y divide-gray-50">
-              {categories.map((c) => (
-                <li key={c.id} className="flex items-center gap-4 px-6 py-4">
-                  <span className="h-2 w-2 shrink-0 rounded-sm bg-brand" />
-                  <span className="font-semibold text-ink">{c.name}</span>
-                  <span className="ml-auto font-mono text-xs text-gray-400">
-                    /{c.slug}
-                  </span>
-                </li>
-              ))}
+              {categories.map((c) =>
+                editingId === c.id ? (
+                  <li key={c.id} className="px-6 py-4">
+                    {editError && (
+                      <p className="mb-2 text-sm text-brand">{editError}</p>
+                    )}
+                    <form onSubmit={saveEdit} className="flex flex-wrap items-center gap-3">
+                      <input
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        className={`${field} max-w-[12rem] flex-1`}
+                        aria-label="Category name"
+                        placeholder="Name"
+                      />
+                      <input
+                        value={editSlug}
+                        onChange={(e) => setEditSlug(e.target.value)}
+                        className={`${field} max-w-[12rem] flex-1 font-mono`}
+                        aria-label="Category slug"
+                        placeholder="slug"
+                      />
+                      <div className="ml-auto flex items-center gap-2">
+                        <button
+                          type="submit"
+                          disabled={savingEdit || !editName.trim() || !editSlug.trim()}
+                          className="rounded-full bg-brand px-4 py-1.5 text-xs font-bold text-white transition hover:bg-brand-600 disabled:opacity-50"
+                        >
+                          {savingEdit ? "Saving…" : "Save"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingId(null)}
+                          disabled={savingEdit}
+                          className="rounded-full px-3 py-1.5 text-xs font-semibold text-gray-500 transition hover:text-ink"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  </li>
+                ) : (
+                  <li key={c.id} className="flex items-center gap-4 px-6 py-4">
+                    <span className="h-2 w-2 shrink-0 rounded-sm bg-brand" />
+                    <span className="font-semibold text-ink">{c.name}</span>
+                    <span className="ml-auto font-mono text-xs text-gray-400">
+                      /{c.slug}
+                    </span>
+                    {canEdit && (
+                      <button
+                        onClick={() => startEdit(c)}
+                        title={`Edit ${c.name}`}
+                        className="rounded-full px-3 py-1.5 text-xs font-semibold text-gray-600 transition hover:bg-gray-100 hover:text-ink"
+                      >
+                        Edit
+                      </button>
+                    )}
+                  </li>
+                ),
+              )}
             </ul>
           )}
         </div>
