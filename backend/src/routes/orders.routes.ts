@@ -5,6 +5,7 @@ import { z } from "zod";
 import { db } from "../db/index.js";
 import { orderItems, orders, products, users } from "../db/schema.js";
 import {
+  requireAdmin,
   requireAuth,
   requireBackOffice,
   type AuthedRequest,
@@ -218,6 +219,23 @@ router.patch(
     }
   },
 );
+
+// DELETE /api/orders/:id — remove an order entirely (admin only).
+// Intended for test/junk entries; cancelled is the right state for real
+// orders. Does not restock inventory.
+router.delete("/:id", requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const id = z.string().uuid("invalid order id").parse(req.params.id);
+    const [row] = await db
+      .delete(orders)
+      .where(eq(orders.id, id))
+      .returning({ id: orders.id });
+    if (!row) throw new HttpError(404, "Order not found");
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+});
 
 // GET /api/orders — the authenticated user's orders, newest first, with items
 router.get("/", requireAuth, async (req: AuthedRequest, res, next) => {
