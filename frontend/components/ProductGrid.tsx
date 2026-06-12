@@ -23,38 +23,44 @@ export function ProductGrid({ products }: { products: Product[] }) {
 
   if (products.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-gray-300 p-12 text-center text-gray-500">
-        No products yet — check back soon.
-      </div>
+      <>
+        <h1 className="mb-6 text-3xl font-bold tracking-tight text-ink">Products</h1>
+        <div className="rounded-lg border border-dashed border-gray-300 p-12 text-center text-gray-500">
+          No products yet — check back soon.
+        </div>
+      </>
     );
   }
 
   return (
     <>
-      <div className="relative mb-8 max-w-md">
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          aria-hidden="true"
-          className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-        >
-          <path
-            d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm10 2-4.35-4.35"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-3xl font-bold tracking-tight text-ink">Products</h1>
+        <div className="relative w-full sm:max-w-xs">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+          >
+            <path
+              d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm10 2-4.35-4.35"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search products…"
+            aria-label="Search products by name, description, or category"
+            className="w-full rounded-full border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
           />
-        </svg>
-        <input
-          type="search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search products…"
-          aria-label="Search products by name, description, or category"
-          className="w-full rounded-full border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
-        />
+        </div>
       </div>
 
       {filtered.length === 0 ? (
