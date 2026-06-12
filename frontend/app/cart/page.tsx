@@ -13,6 +13,7 @@ import {
   type PaymentInfo,
   type PaymentMethod,
   type Product,
+  type ShippingSettings,
 } from "@/lib/types";
 import { useAuthedFetch } from "@/lib/useAuthedFetch";
 
@@ -35,11 +36,15 @@ export default function CartPage() {
   const [shippingAddress, setShippingAddress] = useState("");
   const [shippingPhone, setShippingPhone] = useState("");
   const [payInfo, setPayInfo] = useState<PaymentInfo | null>(null);
+  const [shipping, setShipping] = useState<ShippingSettings | null>(null);
 
-  // Payment instructions maintained by the back office.
+  // Payment instructions and shipping fee maintained by the back office.
   useEffect(() => {
     apiFetch<PaymentInfo>("/api/settings/payment-info")
       .then(setPayInfo)
+      .catch(() => {});
+    apiFetch<ShippingSettings>("/api/settings/shipping-fee")
+      .then(setShipping)
       .catch(() => {});
   }, []);
 
@@ -322,14 +327,51 @@ export default function CartPage() {
                 Summary
               </h2>
               <dl className="mt-4 space-y-2 text-sm">
-                {totalsByCurrency.map(([currency, cents]) => (
-                  <div key={currency} className="flex justify-between">
-                    <dt className="text-gray-500">Total ({currency})</dt>
-                    <dd className="font-bold text-ink">
-                      {formatPrice(cents, currency)}
-                    </dd>
-                  </div>
-                ))}
+                {totalsByCurrency.map(([currency, cents]) => {
+                  const fee =
+                    !mixedCurrencies && shipping
+                      ? shipping.freeAboveCents !== null &&
+                        cents >= shipping.freeAboveCents
+                        ? 0
+                        : shipping.feeCents
+                      : 0;
+                  return (
+                    <div key={currency} className="space-y-2">
+                      <div className="flex justify-between">
+                        <dt className="text-gray-500">Subtotal</dt>
+                        <dd className="font-medium text-ink">
+                          {formatPrice(cents, currency)}
+                        </dd>
+                      </div>
+                      {!mixedCurrencies && shipping && (
+                        <div className="flex justify-between">
+                          <dt className="text-gray-500">Shipping fee</dt>
+                          <dd className="font-medium text-ink">
+                            {fee === 0 && shipping.feeCents > 0 ? (
+                              <span className="font-semibold text-green-600">FREE</span>
+                            ) : (
+                              formatPrice(fee, currency)
+                            )}
+                          </dd>
+                        </div>
+                      )}
+                      <div className="flex justify-between border-t border-gray-100 pt-2">
+                        <dt className="font-semibold text-ink">Total</dt>
+                        <dd className="font-bold text-ink">
+                          {formatPrice(cents + fee, currency)}
+                        </dd>
+                      </div>
+                      {!mixedCurrencies &&
+                        shipping?.freeAboveCents != null &&
+                        cents < shipping.freeAboveCents && (
+                          <p className="text-xs text-gray-400">
+                            Free shipping on orders of{" "}
+                            {formatPrice(shipping.freeAboveCents, currency)} or more.
+                          </p>
+                        )}
+                    </div>
+                  );
+                })}
               </dl>
 
               {mixedCurrencies && (

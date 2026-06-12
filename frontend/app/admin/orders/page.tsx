@@ -30,6 +30,7 @@ type AdminOrder = {
   createdAt: string;
   customerName: string | null;
   customerEmail: string | null;
+  shippingFeeCents: number;
   items: {
     name: string | null;
     quantity: number;
@@ -85,21 +86,66 @@ export default function AdminOrdersPage() {
   const [savingPayInfo, setSavingPayInfo] = useState(false);
   const [payInfoMsg, setPayInfoMsg] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
 
+  const [shipFee, setShipFee] = useState("");
+  const [shipFreeAbove, setShipFreeAbove] = useState("");
+  const [shipLoaded, setShipLoaded] = useState(false);
+  const [savingShip, setSavingShip] = useState(false);
+  const [shipMsg, setShipMsg] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
+
   useEffect(() => {
     Promise.all([
       authedFetch<AdminOrder[]>("/api/orders/all?limit=200"),
       authedFetch<Quote[]>("/api/quotes?limit=100"),
       authedFetch<PaymentInfo>("/api/settings/payment-info"),
+      authedFetch<{ feeCents: number; freeAboveCents: number | null }>(
+        "/api/settings/shipping-fee",
+      ),
     ])
-      .then(([o, q, p]) => {
+      .then(([o, q, p, s]) => {
         setOrders(o);
         setQuotes(q);
         setPayInfo(p);
+        setShipFee(s.feeCents > 0 ? (s.feeCents / 100).toFixed(2) : "0");
+        setShipFreeAbove(
+          s.freeAboveCents !== null ? (s.freeAboveCents / 100).toFixed(2) : "",
+        );
+        setShipLoaded(true);
       })
       .catch((err) =>
         setError(err instanceof Error ? err.message : "Failed to load"),
       );
   }, [authedFetch]);
+
+  async function saveShipping(e: React.FormEvent) {
+    e.preventDefault();
+    setShipMsg(null);
+    const feeCents = Math.round(parseFloat(shipFee || "0") * 100);
+    const freeAbove = shipFreeAbove.trim()
+      ? Math.round(parseFloat(shipFreeAbove) * 100)
+      : null;
+    if (!Number.isFinite(feeCents) || feeCents < 0 || (freeAbove !== null && (!Number.isFinite(freeAbove) || freeAbove < 0))) {
+      setShipMsg({ kind: "error", text: "Enter valid amounts" });
+      return;
+    }
+    setSavingShip(true);
+    try {
+      await authedFetch("/api/settings/shipping-fee", {
+        method: "PUT",
+        body: JSON.stringify({ feeCents, freeAboveCents: freeAbove }),
+      });
+      setShipMsg({
+        kind: "ok",
+        text: "Saved — applied to new orders at checkout immediately.",
+      });
+    } catch (err) {
+      setShipMsg({
+        kind: "error",
+        text: err instanceof Error ? err.message : "Save failed",
+      });
+    } finally {
+      setSavingShip(false);
+    }
+  }
 
   function updatePayInfo<S extends keyof PaymentInfo>(
     section: S,
@@ -534,6 +580,75 @@ export default function AdminOrdersPage() {
         )}
       </section>
 
+      {/* ---- Shipping Fee ---- */}
+      <section className="animate-fade-up delay-3 mt-12">
+        <h2 className="font-display text-lg font-extrabold tracking-tight text-ink">
+          Shipping Fee
+        </h2>
+        <p className="mt-1 text-sm text-gray-500">
+          A flat fee added to every order at checkout, in the order&apos;s
+          currency. Set a threshold to offer free shipping on larger orders.
+        </p>
+
+        {shipMsg && (
+          <div
+            className={`mt-4 rounded-lg px-4 py-2.5 text-sm ${
+              shipMsg.kind === "error"
+                ? "border border-brand/20 bg-brand/5 text-brand"
+                : "border border-green-200 bg-green-50 text-green-700"
+            }`}
+          >
+            {shipMsg.text}
+          </div>
+        )}
+
+        {!shipLoaded ? (
+          <div className="mt-4 h-24 animate-pulse rounded-2xl bg-gray-100" />
+        ) : (
+          <form
+            onSubmit={saveShipping}
+            className="mt-4 flex flex-wrap items-end gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"
+          >
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                Shipping fee
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={shipFee}
+                onChange={(e) => setShipFee(e.target.value)}
+                className={`${field} w-36`}
+                placeholder="84.15"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                Free shipping for orders of{" "}
+                <span className="text-gray-400">(optional)</span>
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={shipFreeAbove}
+                onChange={(e) => setShipFreeAbove(e.target.value)}
+                className={`${field} w-36`}
+                placeholder="leave empty to disable"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={savingShip}
+              className="rounded-full bg-brand px-6 py-2.5 text-sm font-bold text-white transition hover:bg-brand-600 disabled:opacity-50"
+            >
+              {savingShip ? "Saving…" : "Save shipping fee"}
+            </button>
+          </form>
+        )}
+      </section>
+
       {/* ---- Quotations ---- */}
       <section id="quotations-section" className="animate-fade-up delay-3 mt-12">
         <div className="flex items-baseline justify-between">
@@ -794,11 +909,28 @@ export default function AdminOrdersPage() {
                   </li>
                 ))}
               </ul>
-              <div className="mt-3 flex justify-between border-t border-gray-100 pt-3 text-sm">
-                <span className="font-bold text-ink">Total</span>
-                <span className="font-bold text-ink">
-                  {formatPrice(viewing.totalCents, viewing.currency)}
-                </span>
+              <div className="mt-3 space-y-1.5 border-t border-gray-100 pt-3 text-sm">
+                <div className="flex justify-between text-gray-600">
+                  <span>Subtotal</span>
+                  <span>
+                    {formatPrice(
+                      viewing.totalCents - (viewing.shippingFeeCents ?? 0),
+                      viewing.currency,
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between text-gray-600">
+                  <span>Shipping fee</span>
+                  <span>
+                    {formatPrice(viewing.shippingFeeCents ?? 0, viewing.currency)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-bold text-ink">Total</span>
+                  <span className="font-bold text-ink">
+                    {formatPrice(viewing.totalCents, viewing.currency)}
+                  </span>
+                </div>
               </div>
             </div>
 

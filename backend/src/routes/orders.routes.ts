@@ -11,6 +11,7 @@ import {
   type AuthedRequest,
 } from "../middleware/auth.js";
 import { HttpError } from "../middleware/errorHandler.js";
+import { getShippingSettings } from "./settings.routes.js";
 
 const router = Router();
 
@@ -78,16 +79,25 @@ router.post("/", requireAuth, async (req: AuthedRequest, res, next) => {
         );
       }
 
-      const totalCents = productIds.reduce(
+      const subtotalCents = productIds.reduce(
         (sum, id) => sum + byId.get(id)!.priceCents * quantities.get(id)!,
         0,
       );
+
+      // Server-side fee so the client can't tamper with it.
+      const shipping = await getShippingSettings();
+      const shippingFeeCents =
+        shipping.freeAboveCents !== null &&
+        subtotalCents >= shipping.freeAboveCents
+          ? 0
+          : shipping.feeCents;
 
       const [created] = await tx
         .insert(orders)
         .values({
           userId,
-          totalCents,
+          shippingFeeCents,
+          totalCents: subtotalCents + shippingFeeCents,
           currency,
           paymentMethod,
           shippingAddress,
@@ -157,6 +167,7 @@ router.get("/all", requireAuth, requireBackOffice, async (req, res, next) => {
         paymentMethod: orders.paymentMethod,
         shippingAddress: orders.shippingAddress,
         shippingPhone: orders.shippingPhone,
+        shippingFeeCents: orders.shippingFeeCents,
         totalCents: orders.totalCents,
         currency: orders.currency,
         createdAt: orders.createdAt,

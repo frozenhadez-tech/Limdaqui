@@ -1,0 +1,1 @@
+ALTER TABLE "orders" ADD COLUMN "shipping_fee_cents" integer DEFAULT 0 NOT NULL;

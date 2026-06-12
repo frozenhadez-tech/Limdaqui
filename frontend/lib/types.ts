@@ -40,6 +40,11 @@ export const PAYMENT_LABELS: Record<PaymentMethod, string> = {
   bank_transfer: "Bank Transfer",
 };
 
+export type ShippingSettings = {
+  feeCents: number;
+  freeAboveCents: number | null;
+};
+
 export type PaymentInfo = {
   gcash: { accountName: string; accountNumber: string; notes: string };
   bank: {
@@ -56,6 +61,7 @@ export type Order = {
   paymentMethod: PaymentMethod;
   shippingAddress: string | null;
   shippingPhone: string | null;
+  shippingFeeCents: number;
   totalCents: number;
   currency: string;
   createdAt: string;

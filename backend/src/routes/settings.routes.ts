@@ -75,4 +75,62 @@ router.put(
   },
 );
 
+const SHIPPING_KEY = "shipping_fee";
+
+const shippingSchema = z.object({
+  // Flat fee added to every order, in the order's currency.
+  feeCents: z.number().int().min(0).max(100_000_000).default(0),
+  // Subtotal at or above which shipping is free; null disables.
+  freeAboveCents: z.number().int().min(0).max(1_000_000_000).nullable().default(null),
+});
+
+export type ShippingSettings = z.infer<typeof shippingSchema>;
+
+const DEFAULT_SHIPPING: ShippingSettings = { feeCents: 0, freeAboveCents: null };
+
+export async function getShippingSettings(): Promise<ShippingSettings> {
+  const [row] = await db
+    .select()
+    .from(settings)
+    .where(eq(settings.key, SHIPPING_KEY));
+  if (!row) return DEFAULT_SHIPPING;
+  try {
+    return shippingSchema.parse(JSON.parse(row.value));
+  } catch {
+    return DEFAULT_SHIPPING;
+  }
+}
+
+// GET /api/settings/shipping-fee — public: shown in the cart summary
+router.get("/shipping-fee", async (_req, res, next) => {
+  try {
+    res.json(await getShippingSettings());
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PUT /api/settings/shipping-fee — back office (staff and up)
+router.put(
+  "/shipping-fee",
+  requireAuth,
+  requireBackOffice,
+  async (req, res, next) => {
+    try {
+      const data = shippingSchema.parse(req.body);
+      const value = JSON.stringify(data);
+      await db
+        .insert(settings)
+        .values({ key: SHIPPING_KEY, value, updatedAt: new Date() })
+        .onConflictDoUpdate({
+          target: settings.key,
+          set: { value, updatedAt: new Date() },
+        });
+      res.json(data);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 export default router;

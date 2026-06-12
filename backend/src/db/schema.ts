@@ -99,6 +99,8 @@ export const orders = pgTable("orders", {
   // Snapshot of the delivery details at checkout time.
   shippingAddress: varchar("shipping_address", { length: 500 }),
   shippingPhone: varchar("shipping_phone", { length: 60 }),
+  // Fee charged at checkout time (already included in totalCents).
+  shippingFeeCents: integer("shipping_fee_cents").notNull().default(0),
   totalCents: integer("total_cents").notNull().default(0),
   currency: varchar("currency", { length: 3 }).notNull().default("USD"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

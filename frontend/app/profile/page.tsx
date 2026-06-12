@@ -433,6 +433,12 @@ export default function ProfilePage() {
                           </span>
                         </li>
                       ))}
+                      {o.shippingFeeCents > 0 && (
+                        <li className="flex justify-between text-sm text-gray-500">
+                          <span>Shipping fee</span>
+                          <span>{formatPrice(o.shippingFeeCents, o.currency)}</span>
+                        </li>
+                      )}
                     </ul>
                   </li>
                 ))}
