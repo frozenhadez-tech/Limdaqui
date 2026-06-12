@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import Link from "next/link";
 
@@ -18,6 +18,16 @@ const STATUS_STYLES: Record<Order["status"], string> = {
   delivered: "bg-green-50 text-green-600",
   cancelled: "bg-gray-100 text-gray-500",
 };
+
+// Customer-facing stages of an order, mapped to internal statuses.
+const ORDER_TABS: { key: "all" | Order["status"]; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "pending", label: "To Pay" },
+  { key: "paid", label: "To Ship" },
+  { key: "shipped", label: "To Receive" },
+  { key: "delivered", label: "Completed" },
+  { key: "cancelled", label: "Cancelled" },
+];
 
 type Msg = { kind: "error" | "ok"; text: string };
 
@@ -73,6 +83,26 @@ export default function ProfilePage() {
 
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [ordersError, setOrdersError] = useState<string | null>(null);
+  const [orderTab, setOrderTab] = useState<"all" | Order["status"]>("all");
+  const [orderSearch, setOrderSearch] = useState("");
+
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const o of orders ?? []) counts[o.status] = (counts[o.status] ?? 0) + 1;
+    return counts;
+  }, [orders]);
+
+  const filteredOrders = useMemo(() => {
+    const q = orderSearch.trim().toLowerCase();
+    return (orders ?? []).filter((o) => {
+      if (orderTab !== "all" && o.status !== orderTab) return false;
+      if (!q) return true;
+      return (
+        o.id.toLowerCase().includes(q) ||
+        o.items.some((i) => (i.name ?? "").toLowerCase().includes(q))
+      );
+    });
+  }, [orders, orderTab, orderSearch]);
 
   useEffect(() => {
     if (user) {
@@ -300,8 +330,65 @@ export default function ProfilePage() {
                 to place your first one.
               </p>
             ) : (
-              <ul className="mt-4 divide-y divide-gray-100">
-                {orders.map((o) => (
+              <>
+                <div className="mt-4 flex flex-wrap gap-x-6 gap-y-1 border-b border-gray-100">
+                  {ORDER_TABS.map((t) => {
+                    const count =
+                      t.key === "all" ? orders.length : statusCounts[t.key] ?? 0;
+                    const active = orderTab === t.key;
+                    return (
+                      <button
+                        key={t.key}
+                        onClick={() => setOrderTab(t.key)}
+                        aria-current={active ? "true" : undefined}
+                        className={`-mb-px border-b-2 pb-2.5 text-sm transition ${
+                          active
+                            ? "border-brand font-semibold text-brand"
+                            : "border-transparent font-medium text-gray-600 hover:text-brand"
+                        }`}
+                      >
+                        {t.label}
+                        {t.key !== "all" && count > 0 && (
+                          <span className={active ? "" : "text-brand"}> ({count})</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="relative mt-4">
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden="true"
+                    className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                  >
+                    <path
+                      d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm10 2-4.35-4.35"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <input
+                    type="search"
+                    value={orderSearch}
+                    onChange={(e) => setOrderSearch(e.target.value)}
+                    placeholder="You can search by Order ID or product name"
+                    aria-label="Search your orders"
+                    className="w-full rounded-lg bg-gray-100 py-2.5 pl-10 pr-4 text-sm outline-none transition placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-brand/20"
+                  />
+                </div>
+
+                {filteredOrders.length === 0 ? (
+                  <p className="mt-6 text-center text-sm text-gray-400">
+                    No orders here yet.
+                  </p>
+                ) : (
+              <ul className="mt-2 divide-y divide-gray-100">
+                {filteredOrders.map((o) => (
                   <li key={o.id} className="py-4 first:pt-0 last:pb-0">
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                       <span className="font-mono text-xs text-gray-400">
@@ -347,6 +434,8 @@ export default function ProfilePage() {
                   </li>
                 ))}
               </ul>
+                )}
+              </>
             )}
           </Card>
         </div>
