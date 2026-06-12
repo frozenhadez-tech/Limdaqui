@@ -100,7 +100,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50 md:flex-row">
-      <aside className="relative flex flex-col bg-ink text-white md:min-h-screen md:w-64 md:shrink-0">
+      <aside className="relative flex flex-col bg-ink text-white md:sticky md:top-0 md:h-screen md:w-64 md:shrink-0 md:self-start md:overflow-y-auto">
         {/* Subtle texture matching the public hero */}
         <div
           aria-hidden
