@@ -152,23 +152,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
         </nav>
 
-        <div className="relative mt-auto hidden border-t border-white/10 px-6 py-5 md:block">
-          <p className="truncate text-xs font-semibold text-white/80">
-            {user.fullName ?? user.email}
-          </p>
-          <p className="mt-0.5 text-[0.65rem] uppercase tracking-[0.18em] text-white/40">
-            {user.role}
-          </p>
-          <div className="mt-3 flex items-center gap-4 text-xs font-medium">
-            <Link href="/" className="text-white/60 transition hover:text-white">
-              View store ↗
-            </Link>
-            <button
-              onClick={logout}
-              className="text-white/60 transition hover:text-brand"
-            >
-              Log out
-            </button>
+        <div className="relative border-t border-white/10 px-4 py-3 md:mt-auto md:px-6 md:py-5">
+          <div className="flex items-center justify-between gap-3 md:block">
+            <div className="min-w-0">
+              <p className="truncate text-xs font-semibold text-white/80">
+                {user.fullName ?? user.email}
+              </p>
+              <p className="mt-0.5 text-[0.65rem] uppercase tracking-[0.18em] text-white/40">
+                {user.role}
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-4 text-xs font-medium md:mt-3">
+              <Link href="/" className="text-white/60 transition hover:text-white">
+                View store ↗
+              </Link>
+              <button
+                onClick={logout}
+                className="text-white/60 transition hover:text-brand"
+              >
+                Log out
+              </button>
+            </div>
           </div>
         </div>
       </aside>

@@ -244,7 +244,7 @@ export default function AdminUsersPage() {
         />
       </div>
 
-      <div className="animate-fade-up delay-2 mt-4 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+      <div className="animate-fade-up delay-2 mt-4 overflow-x-auto rounded-2xl border border-gray-100 bg-white shadow-sm">
         {!usersList ? (
           <div className="space-y-3 p-6">
             {[0, 1, 2].map((i) => (

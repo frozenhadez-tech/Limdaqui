@@ -328,7 +328,7 @@ export default function AdminOrdersPage() {
           </select>
         </div>
 
-        <div className="mt-4 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+        <div className="mt-4 overflow-x-auto rounded-2xl border border-gray-100 bg-white shadow-sm">
           {!orders ? (
             <div className="space-y-3 p-6">
               {[0, 1, 2].map((i) => (

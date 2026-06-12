@@ -251,7 +251,7 @@ export default function CartPage() {
               {rows.map((r) => (
                 <li
                   key={`${r.id}|${r.variant ?? ""}`}
-                  className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
+                  className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
                 >
                   {r.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -263,7 +263,7 @@ export default function CartPage() {
                   ) : (
                     <div className="h-16 w-16 shrink-0 rounded-xl bg-gray-100" />
                   )}
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 basis-40">
                     <p className="truncate font-semibold text-ink">{r.name}</p>
                     {r.variant && (
                       <p className="text-xs text-gray-400">{r.variant}</p>
@@ -277,47 +277,50 @@ export default function CartPage() {
                       )}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1">
+                  {/* On phones these controls wrap onto their own full-width row. */}
+                  <div className="flex w-full items-center justify-between gap-2 sm:ml-auto sm:w-auto sm:justify-end sm:gap-4">
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setQuantity(r.id, r.variant, r.quantity - 1)}
+                        aria-label={`Decrease quantity of ${r.name}`}
+                        className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-600 transition hover:border-brand hover:text-brand"
+                      >
+                        −
+                      </button>
+                      <span className="w-9 text-center text-sm font-bold text-ink">
+                        {r.quantity}
+                      </span>
+                      <button
+                        onClick={() =>
+                          setQuantity(r.id, r.variant, Math.min(r.quantity + 1, r.stock))
+                        }
+                        disabled={r.quantity >= r.stock}
+                        aria-label={`Increase quantity of ${r.name}`}
+                        className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-600 transition hover:border-brand hover:text-brand disabled:opacity-40"
+                      >
+                        +
+                      </button>
+                    </div>
+                    <p className="text-right font-bold text-ink sm:w-24">
+                      {formatPrice(r.priceCents * r.quantity, r.currency)}
+                    </p>
                     <button
-                      onClick={() => setQuantity(r.id, r.variant, r.quantity - 1)}
-                      aria-label={`Decrease quantity of ${r.name}`}
-                      className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-600 transition hover:border-brand hover:text-brand"
+                      onClick={() => remove(r.id, r.variant)}
+                      title={`Remove ${r.name} from cart`}
+                      aria-label={`Remove ${r.name} from cart`}
+                      className="rounded-full p-2 text-gray-300 transition hover:bg-red-50 hover:text-red-500"
                     >
-                      −
-                    </button>
-                    <span className="w-9 text-center text-sm font-bold text-ink">
-                      {r.quantity}
-                    </span>
-                    <button
-                      onClick={() =>
-                        setQuantity(r.id, r.variant, Math.min(r.quantity + 1, r.stock))
-                      }
-                      disabled={r.quantity >= r.stock}
-                      aria-label={`Increase quantity of ${r.name}`}
-                      className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-600 transition hover:border-brand hover:text-brand disabled:opacity-40"
-                    >
-                      +
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path
+                          d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m3 0-1 13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1L6 7"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
                     </button>
                   </div>
-                  <p className="w-24 text-right font-bold text-ink">
-                    {formatPrice(r.priceCents * r.quantity, r.currency)}
-                  </p>
-                  <button
-                    onClick={() => remove(r.id, r.variant)}
-                    title={`Remove ${r.name} from cart`}
-                    aria-label={`Remove ${r.name} from cart`}
-                    className="rounded-full p-2 text-gray-300 transition hover:bg-red-50 hover:text-red-500"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path
-                        d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m3 0-1 13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1L6 7"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
                 </li>
               ))}
             </ul>
