@@ -1,14 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { AddToCartButton } from "@/components/AddToCartButton";
 import { PriceTag } from "@/components/PriceTag";
 import { resolveImageUrl } from "@/lib/api";
 import { type Product } from "@/lib/types";
 
+const PAGE_SIZE = 10;
+
 export function ProductGrid({ products }: { products: Product[] }) {
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -20,6 +23,23 @@ export function ProductGrid({ products }: { products: Product[] }) {
         .includes(q),
     );
   }, [products, search]);
+
+  // A new search starts back at the first page of its results.
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const visible = filtered.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
+
+  function goToPage(next: number) {
+    setPage(next);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   if (products.length === 0) {
     return (
@@ -77,7 +97,7 @@ export function ProductGrid({ products }: { products: Product[] }) {
         </div>
       ) : (
         <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((product) => (
+          {visible.map((product) => (
             <li
               key={product.id}
               className="group overflow-hidden rounded-xl border border-gray-200 bg-white transition hover:shadow-lg"
@@ -129,6 +149,50 @@ export function ProductGrid({ products }: { products: Product[] }) {
             </li>
           ))}
         </ul>
+      )}
+
+      {filtered.length > PAGE_SIZE && (
+        <nav
+          aria-label="Product pages"
+          className="mt-10 flex flex-wrap items-center justify-center gap-2"
+        >
+          <button
+            onClick={() => goToPage(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition hover:border-brand hover:text-brand disabled:opacity-40 disabled:hover:border-gray-200 disabled:hover:text-gray-600"
+          >
+            ‹ Prev
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+            <button
+              key={n}
+              onClick={() => goToPage(n)}
+              aria-current={n === currentPage ? "page" : undefined}
+              className={`h-10 w-10 rounded-full text-sm font-bold transition ${
+                n === currentPage
+                  ? "bg-brand text-white shadow-sm shadow-brand/20"
+                  : "border border-gray-200 text-gray-600 hover:border-brand hover:text-brand"
+              }`}
+            >
+              {n}
+            </button>
+          ))}
+          <button
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition hover:border-brand hover:text-brand disabled:opacity-40 disabled:hover:border-gray-200 disabled:hover:text-gray-600"
+          >
+            Next ›
+          </button>
+        </nav>
+      )}
+
+      {filtered.length > 0 && (
+        <p className="mt-4 text-center text-xs text-gray-400">
+          Showing {(currentPage - 1) * PAGE_SIZE + 1}–
+          {Math.min(currentPage * PAGE_SIZE, filtered.length)} of {filtered.length}{" "}
+          products
+        </p>
       )}
     </>
   );
