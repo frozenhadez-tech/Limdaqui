@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { useAuth } from "@/lib/auth";
 import { useCart } from "@/lib/cart";
 
 export function AddToCartButton({
@@ -12,6 +13,7 @@ export function AddToCartButton({
   disabled?: boolean;
 }) {
   const { add } = useCart();
+  const { user } = useAuth();
   const [added, setAdded] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -21,6 +23,9 @@ export function AddToCartButton({
     },
     [],
   );
+
+  // Like prices, the cart is for signed-in customers only.
+  if (!user) return null;
 
   if (disabled) {
     return (
