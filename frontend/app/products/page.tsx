@@ -7,7 +7,7 @@ export const revalidate = 60;
 
 async function getProducts(): Promise<Product[]> {
   try {
-    const res = await fetch(`${API_URL}/api/products`, {
+    const res = await fetch(`${API_URL}/api/products?limit=100`, {
       next: { revalidate: 60 },
     });
     if (!res.ok) return [];
