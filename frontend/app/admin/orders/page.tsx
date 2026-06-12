@@ -342,7 +342,55 @@ export default function AdminOrdersPage() {
                 : "No orders match your search."}
             </p>
           ) : (
-            <table className="w-full text-left text-sm">
+            <>
+            {/* Phone: card per order */}
+            <ul className="divide-y divide-gray-50 md:hidden">
+              {visible.map((o) => (
+                <li key={o.id} className="space-y-2.5 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <button
+                      onClick={() => setViewing(o)}
+                      title="View full order details"
+                      className="font-mono text-xs font-semibold text-brand underline-offset-2 hover:underline"
+                    >
+                      #{o.id.slice(0, 8)}
+                    </button>
+                    <StatusPill status={o.status} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-ink">
+                      {o.customerName ?? "—"}
+                    </p>
+                    <p className="truncate text-xs text-gray-500">
+                      {o.customerEmail ?? "deleted account"}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="font-bold text-ink">
+                      {formatPrice(o.totalCents, o.currency)}
+                    </span>
+                    <select
+                      value={o.status}
+                      onChange={(e) =>
+                        updateStatus(o.id, e.target.value as OrderStatus)
+                      }
+                      className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-semibold capitalize outline-none transition focus:border-brand"
+                      aria-label={`Update status of order ${o.id.slice(0, 8)}`}
+                    >
+                      {STATUSES.map((s) => (
+                        <option key={s} value={s}>
+                          {s.charAt(0).toUpperCase() + s.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <p className="text-xs text-gray-400">{formatDate(o.createdAt)}</p>
+                </li>
+              ))}
+            </ul>
+
+            {/* Desktop: table */}
+            <table className="hidden w-full text-left text-sm md:table">
               <thead>
                 <tr className="border-b border-gray-100 text-xs font-semibold uppercase tracking-wider text-gray-400">
                   <th className="px-6 py-3.5">Order ID</th>
@@ -401,6 +449,7 @@ export default function AdminOrdersPage() {
                 ))}
               </tbody>
             </table>
+            </>
           )}
         </div>
 

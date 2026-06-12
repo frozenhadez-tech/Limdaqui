@@ -304,7 +304,45 @@ export default function AdminProductsPage() {
             No products match your search.
           </p>
         ) : (
-          <table className="w-full text-left text-sm">
+          <>
+          {/* Phone: card per product */}
+          <ul className="divide-y divide-gray-50 md:hidden">
+            {visible.map((p) => (
+              <li
+                key={p.id}
+                onClick={() => canEdit && openEditor(p)}
+                title={canEdit ? `Edit ${p.name}` : undefined}
+                className={`flex items-center gap-3 p-4 ${canEdit ? "cursor-pointer active:bg-gray-50" : ""}`}
+              >
+                {p.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={resolveImageUrl(p.imageUrl)!}
+                    alt=""
+                    className="h-12 w-12 shrink-0 rounded-lg object-cover"
+                  />
+                ) : (
+                  <div className="h-12 w-12 shrink-0 rounded-lg bg-gray-100" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-semibold text-ink">{p.name}</p>
+                  <p className="truncate text-xs text-gray-400">
+                    {p.categoryName ?? "No category"}
+                  </p>
+                  <div className="mt-1 flex items-center gap-2.5">
+                    <span className="text-sm font-bold text-ink">
+                      {formatPrice(p.priceCents, p.currency)}
+                    </span>
+                    <StockPill stock={p.stock} />
+                  </div>
+                </div>
+                {canEdit && <span className="shrink-0 text-gray-300">›</span>}
+              </li>
+            ))}
+          </ul>
+
+          {/* Desktop: table */}
+          <table className="hidden w-full text-left text-sm md:table">
             <thead>
               <tr className="border-b border-gray-100 text-xs font-semibold uppercase tracking-wider text-gray-400">
                 <th className="px-6 py-3.5">Product</th>
@@ -358,6 +396,7 @@ export default function AdminProductsPage() {
               ))}
             </tbody>
           </table>
+          </>
         )}
       </div>
 

@@ -256,7 +256,73 @@ export default function AdminUsersPage() {
             No users match your search.
           </p>
         ) : (
-          <table className="w-full text-left text-sm">
+          <>
+          {/* Phone: card per user */}
+          <ul className="divide-y divide-gray-50 md:hidden">
+            {visible.map((u) => (
+              <li key={u.id} className="space-y-2.5 p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink font-display text-sm font-bold text-white">
+                    {(u.fullName ?? u.email).charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-ink">
+                      {u.fullName ?? "—"}
+                      {u.id === me?.id && (
+                        <span className="ml-1.5 text-xs font-medium text-gray-400">
+                          (you)
+                        </span>
+                      )}
+                    </p>
+                    <p className="truncate text-xs text-gray-500">{u.email}</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <RolePill role={u.role} />
+                    <StatusPill status={u.status} />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => toggleSuspend(u)}
+                      disabled={targetLocked(u)}
+                      title={
+                        u.id === me?.id
+                          ? "You cannot suspend your own account"
+                          : targetLocked(u)
+                            ? "Only admins can modify admin accounts"
+                            : u.status === "active"
+                              ? `Suspend ${u.email}`
+                              : `Reactivate ${u.email}`
+                      }
+                      className={`rounded-full px-3 py-1.5 text-xs font-semibold transition disabled:opacity-40 ${
+                        u.status === "active"
+                          ? "text-amber-600 hover:bg-amber-50"
+                          : "text-green-600 hover:bg-green-50"
+                      }`}
+                    >
+                      {u.status === "active" ? "Suspend" : "Activate"}
+                    </button>
+                    <button
+                      onClick={() => openEditor(u)}
+                      disabled={!meIsAdmin && u.role === "admin"}
+                      title={
+                        !meIsAdmin && u.role === "admin"
+                          ? "Only admins can modify admin accounts"
+                          : `Edit ${u.email}`
+                      }
+                      className="rounded-full px-3 py-1.5 text-xs font-semibold text-gray-600 transition hover:bg-gray-100 hover:text-ink disabled:opacity-40"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          {/* Desktop: table */}
+          <table className="hidden w-full text-left text-sm md:table">
             <thead>
               <tr className="border-b border-gray-100 text-xs font-semibold uppercase tracking-wider text-gray-400">
                 <th className="px-6 py-3.5">User</th>
@@ -336,6 +402,7 @@ export default function AdminUsersPage() {
               ))}
             </tbody>
           </table>
+          </>
         )}
       </div>
 
