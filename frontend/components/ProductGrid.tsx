@@ -7,7 +7,7 @@ import { PriceTag } from "@/components/PriceTag";
 import { resolveImageUrl } from "@/lib/api";
 import { type Product } from "@/lib/types";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 12;
 
 export function ProductGrid({ products }: { products: Product[] }) {
   const [search, setSearch] = useState("");
