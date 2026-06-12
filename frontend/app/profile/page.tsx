@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import Link from "next/link";
 
+import { resolveImageUrl } from "@/lib/api";
 import { useAuth, type User } from "@/lib/auth";
 import { formatDate, formatPrice, PAYMENT_LABELS, type Order } from "@/lib/types";
 import { useAuthedFetch } from "@/lib/useAuthedFetch";
@@ -415,28 +416,41 @@ export default function ProfilePage() {
                         {o.shippingPhone ? ` · ${o.shippingPhone}` : ""}
                       </p>
                     )}
-                    <ul className="mt-2 space-y-1">
+                    <ul className="mt-2 space-y-1.5">
                       {o.items.map((item) => (
                         <li
-                          key={item.productId}
-                          className="flex justify-between text-sm text-gray-600"
+                          key={`${item.productId}|${item.variant ?? ""}`}
+                          className="flex items-center gap-2.5 text-sm text-gray-600"
                         >
-                          <span>
+                          {item.imageUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={resolveImageUrl(item.imageUrl)!}
+                              alt=""
+                              className="h-9 w-9 shrink-0 rounded-lg border border-gray-100 object-cover"
+                            />
+                          ) : (
+                            <div className="h-9 w-9 shrink-0 rounded-lg bg-gray-100" />
+                          )}
+                          <span className="min-w-0 flex-1 truncate">
                             {item.name ?? "Removed product"}
                             {item.variant && (
                               <span className="text-gray-400"> ({item.variant})</span>
                             )}{" "}
                             <span className="text-gray-400">× {item.quantity}</span>
                           </span>
-                          <span>
+                          <span className="shrink-0">
                             {formatPrice(item.unitPriceCents * item.quantity, o.currency)}
                           </span>
                         </li>
                       ))}
                       {o.shippingFeeCents > 0 && (
-                        <li className="flex justify-between text-sm text-gray-500">
-                          <span>Shipping fee</span>
-                          <span>{formatPrice(o.shippingFeeCents, o.currency)}</span>
+                        <li className="flex items-center gap-2.5 text-sm text-gray-500">
+                          <span className="h-9 w-9 shrink-0" aria-hidden="true" />
+                          <span className="min-w-0 flex-1">Shipping fee</span>
+                          <span className="shrink-0">
+                            {formatPrice(o.shippingFeeCents, o.currency)}
+                          </span>
                         </li>
                       )}
                     </ul>
