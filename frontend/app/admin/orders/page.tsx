@@ -72,6 +72,7 @@ export default function AdminOrdersPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | OrderStatus>("all");
   const [page, setPage] = useState(1);
+  const [quotePage, setQuotePage] = useState(1);
   const [viewing, setViewing] = useState<AdminOrder | null>(null);
   const [openQuoteId, setOpenQuoteId] = useState<string | null>(null);
 
@@ -159,6 +160,20 @@ export default function AdminOrdersPage() {
   function goToPage(next: number) {
     setPage(next);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  const quoteTotalPages = Math.max(1, Math.ceil((quotes?.length ?? 0) / PAGE_SIZE));
+  const currentQuotePage = Math.min(quotePage, quoteTotalPages);
+  const visibleQuotes = (quotes ?? []).slice(
+    (currentQuotePage - 1) * PAGE_SIZE,
+    currentQuotePage * PAGE_SIZE,
+  );
+
+  function goToQuotePage(next: number) {
+    setQuotePage(next);
+    document
+      .getElementById("quotations-section")
+      ?.scrollIntoView({ behavior: "smooth" });
   }
 
   async function downloadAttachment(q: Quote) {
@@ -515,7 +530,7 @@ export default function AdminOrdersPage() {
       </section>
 
       {/* ---- Quotations ---- */}
-      <section className="animate-fade-up delay-3 mt-12">
+      <section id="quotations-section" className="animate-fade-up delay-3 mt-12">
         <div className="flex items-baseline justify-between">
           <h2 className="font-display text-lg font-extrabold tracking-tight text-ink">
             Quotations
@@ -543,7 +558,7 @@ export default function AdminOrdersPage() {
             </div>
           ) : (
             <ul className="space-y-3">
-              {quotes.map((q) => {
+              {visibleQuotes.map((q) => {
                 const open = openQuoteId === q.id;
                 return (
                   <li
@@ -641,6 +656,50 @@ export default function AdminOrdersPage() {
             </ul>
           )}
         </div>
+
+        {(quotes?.length ?? 0) > PAGE_SIZE && (
+          <nav
+            aria-label="Quotation pages"
+            className="mt-6 flex flex-wrap items-center justify-center gap-2"
+          >
+            <button
+              onClick={() => goToQuotePage(currentQuotePage - 1)}
+              disabled={currentQuotePage === 1}
+              className="rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition hover:border-brand hover:text-brand disabled:opacity-40 disabled:hover:border-gray-200 disabled:hover:text-gray-600"
+            >
+              ‹ Prev
+            </button>
+            {Array.from({ length: quoteTotalPages }, (_, i) => i + 1).map((n) => (
+              <button
+                key={n}
+                onClick={() => goToQuotePage(n)}
+                aria-current={n === currentQuotePage ? "page" : undefined}
+                className={`h-10 w-10 rounded-full text-sm font-bold transition ${
+                  n === currentQuotePage
+                    ? "bg-brand text-white shadow-sm shadow-brand/20"
+                    : "border border-gray-200 text-gray-600 hover:border-brand hover:text-brand"
+                }`}
+              >
+                {n}
+              </button>
+            ))}
+            <button
+              onClick={() => goToQuotePage(currentQuotePage + 1)}
+              disabled={currentQuotePage === quoteTotalPages}
+              className="rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition hover:border-brand hover:text-brand disabled:opacity-40 disabled:hover:border-gray-200 disabled:hover:text-gray-600"
+            >
+              Next ›
+            </button>
+          </nav>
+        )}
+
+        {(quotes?.length ?? 0) > 0 && (
+          <p className="mt-3 text-center text-xs text-gray-400">
+            Showing {(currentQuotePage - 1) * PAGE_SIZE + 1}–
+            {Math.min(currentQuotePage * PAGE_SIZE, quotes!.length)} of{" "}
+            {quotes!.length} requests
+          </p>
+        )}
       </section>
 
       {/* ---- Order details popup ---- */}
