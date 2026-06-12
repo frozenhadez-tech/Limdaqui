@@ -71,6 +71,13 @@
       "when": 1781185368440,
       "tag": "0009_large_invaders",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1781237006109,
+      "tag": "0010_clumsy_dark_phoenix",
+      "breakpoints": true
     }
   ]
 }

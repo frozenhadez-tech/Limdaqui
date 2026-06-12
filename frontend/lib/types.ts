@@ -13,6 +13,8 @@ export type Product = {
   priceCents: number;
   currency: string;
   stock: number;
+  colors: string[] | null;
+  sizes: string[] | null;
   imageUrl: string | null;
   categoryId: string | null;
   categoryName: string | null;
@@ -25,6 +27,7 @@ export type OrderItem = {
   productId: string;
   quantity: number;
   unitPriceCents: number;
+  variant: string | null;
   name: string | null;
   imageUrl: string | null;
 };

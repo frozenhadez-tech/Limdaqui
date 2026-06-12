@@ -16,7 +16,7 @@ import {
 } from "@/lib/types";
 import { useAuthedFetch } from "@/lib/useAuthedFetch";
 
-type CartRow = Product & { quantity: number };
+type CartRow = Product & { quantity: number; variant: string | null };
 
 const checkoutField =
   "w-full rounded-lg border border-gray-200 px-3.5 py-2 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20";
@@ -58,9 +58,10 @@ export default function CartPage() {
       setProducts(new Map());
       return;
     }
+    const uniqueIds = [...new Set(lines.map((l) => l.productId))];
     Promise.all(
-      lines.map((l) =>
-        apiFetch<Product>(`/api/products/${l.productId}`).catch(() => null),
+      uniqueIds.map((id) =>
+        apiFetch<Product>(`/api/products/${id}`).catch(() => null),
       ),
     ).then((results) => {
       if (cancelled) return;
@@ -75,14 +76,14 @@ export default function CartPage() {
     };
     // Refetch only when the set of product ids changes, not on qty changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lines.map((l) => l.productId).join(",")]);
+  }, [[...new Set(lines.map((l) => l.productId))].join(",")]);
 
   const rows: CartRow[] = useMemo(() => {
     if (!products) return [];
     return lines
       .map((l) => {
         const p = products.get(l.productId);
-        return p ? { ...p, quantity: l.quantity } : null;
+        return p ? { ...p, quantity: l.quantity, variant: l.variant ?? null } : null;
       })
       .filter((r): r is CartRow => r !== null);
   }, [lines, products]);
@@ -107,7 +108,11 @@ export default function CartPage() {
       const order = await authedFetch<{ id: string }>("/api/orders", {
         method: "POST",
         body: JSON.stringify({
-          items: rows.map((r) => ({ productId: r.id, quantity: r.quantity })),
+          items: rows.map((r) => ({
+            productId: r.id,
+            quantity: r.quantity,
+            ...(r.variant ? { variant: r.variant } : {}),
+          })),
           paymentMethod,
           shippingAddress: shippingAddress.trim(),
           ...(shippingPhone.trim() ? { shippingPhone: shippingPhone.trim() } : {}),
@@ -240,7 +245,7 @@ export default function CartPage() {
             <ul className="space-y-3">
               {rows.map((r) => (
                 <li
-                  key={r.id}
+                  key={`${r.id}|${r.variant ?? ""}`}
                   className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
                 >
                   {r.imageUrl ? (
@@ -255,6 +260,9 @@ export default function CartPage() {
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold text-ink">{r.name}</p>
+                    {r.variant && (
+                      <p className="text-xs text-gray-400">{r.variant}</p>
+                    )}
                     <p className="text-sm text-gray-500">
                       {formatPrice(r.priceCents, r.currency)}
                       {r.quantity > r.stock && (
@@ -266,7 +274,7 @@ export default function CartPage() {
                   </div>
                   <div className="flex items-center gap-1">
                     <button
-                      onClick={() => setQuantity(r.id, r.quantity - 1)}
+                      onClick={() => setQuantity(r.id, r.variant, r.quantity - 1)}
                       aria-label={`Decrease quantity of ${r.name}`}
                       className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-600 transition hover:border-brand hover:text-brand"
                     >
@@ -277,7 +285,7 @@ export default function CartPage() {
                     </span>
                     <button
                       onClick={() =>
-                        setQuantity(r.id, Math.min(r.quantity + 1, r.stock))
+                        setQuantity(r.id, r.variant, Math.min(r.quantity + 1, r.stock))
                       }
                       disabled={r.quantity >= r.stock}
                       aria-label={`Increase quantity of ${r.name}`}
@@ -290,7 +298,7 @@ export default function CartPage() {
                     {formatPrice(r.priceCents * r.quantity, r.currency)}
                   </p>
                   <button
-                    onClick={() => remove(r.id)}
+                    onClick={() => remove(r.id, r.variant)}
                     title={`Remove ${r.name} from cart`}
                     aria-label={`Remove ${r.name} from cart`}
                     className="rounded-full p-2 text-gray-300 transition hover:bg-red-50 hover:text-red-500"

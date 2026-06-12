@@ -29,7 +29,12 @@ type SalesOrder = {
   createdAt: string;
   customerName: string | null;
   customerEmail: string | null;
-  items: { name: string | null; quantity: number; unitPriceCents: number }[];
+  items: {
+    name: string | null;
+    quantity: number;
+    unitPriceCents: number;
+    variant: string | null;
+  }[];
 };
 
 type PeriodType = "day" | "month" | "year";
@@ -178,7 +183,12 @@ export default function AdminReportsPage() {
           formatDate(o.createdAt),
           o.customerName ?? "",
           o.customerEmail ?? "",
-          o.items.map((i) => `${i.name ?? "Removed product"} x${i.quantity}`).join("; "),
+          o.items
+            .map(
+              (i) =>
+                `${i.name ?? "Removed product"}${i.variant ? ` (${i.variant})` : ""} x${i.quantity}`,
+            )
+            .join("; "),
           o.items.reduce((s, i) => s + i.quantity, 0),
           formatPrice(o.totalCents, o.currency),
           o.currency,

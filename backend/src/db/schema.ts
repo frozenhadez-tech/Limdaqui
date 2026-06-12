@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 import {
   customType,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   text,
@@ -74,6 +75,10 @@ export const products = pgTable(
     priceCents: integer("price_cents").notNull(),
     currency: varchar("currency", { length: 3 }).notNull().default("USD"),
     stock: integer("stock").notNull().default(0),
+    // Optional selectable options (e.g. apparel): customers must pick one
+    // of each before adding to cart. Availability follows product stock.
+    colors: jsonb("colors").$type<string[]>(),
+    sizes: jsonb("sizes").$type<string[]>(),
     imageUrl: text("image_url"),
     categoryId: uuid("category_id").references(() => categories.id, {
       onDelete: "set null",
@@ -157,6 +162,8 @@ export const orderItems = pgTable("order_items", {
   quantity: integer("quantity").notNull(),
   // Snapshot of the unit price at purchase time.
   unitPriceCents: integer("unit_price_cents").notNull(),
+  // Chosen options at purchase time, e.g. "Black / L".
+  variant: varchar("variant", { length: 160 }),
 });
 
 // ---------------------------------------------------------------------------

@@ -22,6 +22,8 @@ type FormState = {
   stock: string;
   imageUrl: string;
   categoryId: string;
+  colors: string;
+  sizes: string;
 };
 
 const EMPTY_FORM: FormState = {
@@ -34,7 +36,18 @@ const EMPTY_FORM: FormState = {
   stock: "0",
   imageUrl: "",
   categoryId: "",
+  colors: "",
+  sizes: "",
 };
+
+/** "Black, White , Red" -> ["Black","White","Red"]; empty -> null. */
+function parseOptions(value: string): string[] | null {
+  const parts = value
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return parts.length > 0 ? parts : null;
+}
 
 function slugify(value: string): string {
   return value
@@ -54,6 +67,8 @@ function toForm(p: Product): FormState {
     stock: String(p.stock),
     imageUrl: p.imageUrl ?? "",
     categoryId: p.categoryId ?? "",
+    colors: (p.colors ?? []).join(", "),
+    sizes: (p.sizes ?? []).join(", "),
   };
 }
 
@@ -172,6 +187,8 @@ export default function AdminProductsPage() {
       stock: parseInt(form.stock, 10) || 0,
       imageUrl: form.imageUrl.trim() || null,
       categoryId: form.categoryId || null,
+      colors: parseOptions(form.colors),
+      sizes: parseOptions(form.sizes),
     };
 
     setSaving(true);
@@ -504,6 +521,32 @@ export default function AdminProductsPage() {
                       </option>
                     ))}
                   </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                    Colors <span className="text-gray-400">(optional)</span>
+                  </label>
+                  <input
+                    value={form.colors}
+                    onChange={(e) => update("colors", e.target.value)}
+                    className={field}
+                    placeholder="Black, White"
+                    title="Comma-separated; customers must pick one at checkout"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                    Sizes <span className="text-gray-400">(optional)</span>
+                  </label>
+                  <input
+                    value={form.sizes}
+                    onChange={(e) => update("sizes", e.target.value)}
+                    className={field}
+                    placeholder="M, L, XL, XXL"
+                    title="Comma-separated; customers must pick one at checkout"
+                  />
                 </div>
               </div>
               <div>

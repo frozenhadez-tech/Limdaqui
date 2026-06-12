@@ -30,7 +30,12 @@ type AdminOrder = {
   createdAt: string;
   customerName: string | null;
   customerEmail: string | null;
-  items: { name: string | null; quantity: number; unitPriceCents: number }[];
+  items: {
+    name: string | null;
+    quantity: number;
+    unitPriceCents: number;
+    variant: string | null;
+  }[];
 };
 
 const PAGE_SIZE = 25;
@@ -777,7 +782,10 @@ export default function AdminOrdersPage() {
                 {viewing.items.map((item, i) => (
                   <li key={i} className="flex justify-between text-sm text-gray-700">
                     <span>
-                      {item.name ?? "Removed product"}{" "}
+                      {item.name ?? "Removed product"}
+                      {item.variant && (
+                        <span className="text-gray-400"> ({item.variant})</span>
+                      )}{" "}
                       <span className="text-gray-400">× {item.quantity}</span>
                     </span>
                     <span>

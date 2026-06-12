@@ -27,6 +27,9 @@ const productInput = z.object({
   priceCents: z.number().int().nonnegative(),
   currency: z.string().length(3).optional(),
   stock: z.number().int().nonnegative().optional(),
+  // Optional selectable options (apparel etc.).
+  colors: z.array(z.string().min(1).max(40)).max(30).nullable().optional(),
+  sizes: z.array(z.string().min(1).max(40)).max(30).nullable().optional(),
   // Either an absolute URL or a path to an uploaded image (/api/images/:id).
   imageUrl: z
     .string()
@@ -51,6 +54,8 @@ const productColumns = {
   priceCents: products.priceCents,
   currency: products.currency,
   stock: products.stock,
+  colors: products.colors,
+  sizes: products.sizes,
   imageUrl: products.imageUrl,
   categoryId: products.categoryId,
   categoryName: categories.name,
@@ -88,15 +93,17 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-// GET /api/products/:id
+// GET /api/products/:idOrSlug — by UUID or by slug
 router.get("/:id", async (req, res, next) => {
   try {
-    const id = idParam.parse(req.params.id);
+    const value = req.params.id ?? "";
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
     const [row] = await db
       .select(productColumns)
       .from(products)
       .leftJoin(categories, eq(products.categoryId, categories.id))
-      .where(eq(products.id, id));
+      .where(isUuid ? eq(products.id, value) : eq(products.slug, value));
 
     if (!row) throw new HttpError(404, "Product not found");
     res.json(row);

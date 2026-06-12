@@ -20,6 +20,8 @@ const createOrderSchema = z.object({
       z.object({
         productId: z.string().uuid(),
         quantity: z.number().int().min(1).max(999),
+        // Chosen options, e.g. "Black / L".
+        variant: z.string().max(160).optional(),
       }),
     )
     .min(1)
@@ -36,9 +38,16 @@ router.post("/", requireAuth, async (req: AuthedRequest, res, next) => {
       createOrderSchema.parse(req.body);
     const userId = req.user!.sub;
 
-    // Collapse duplicate product lines into one.
+    // Collapse duplicate lines (same product + same variant) into one,
+    // while stock is checked per product across all its variants.
+    const lines = new Map<string, { productId: string; variant: string | null; quantity: number }>();
     const quantities = new Map<string, number>();
     for (const item of items) {
+      const variant = item.variant?.trim() || null;
+      const key = `${item.productId}|${variant ?? ""}`;
+      const existing = lines.get(key);
+      if (existing) existing.quantity += item.quantity;
+      else lines.set(key, { productId: item.productId, variant, quantity: item.quantity });
       quantities.set(
         item.productId,
         (quantities.get(item.productId) ?? 0) + item.quantity,
@@ -87,11 +96,12 @@ router.post("/", requireAuth, async (req: AuthedRequest, res, next) => {
         .returning();
 
       await tx.insert(orderItems).values(
-        productIds.map((id) => ({
+        [...lines.values()].map((line) => ({
           orderId: created!.id,
-          productId: id,
-          quantity: quantities.get(id)!,
-          unitPriceCents: byId.get(id)!.priceCents,
+          productId: line.productId,
+          quantity: line.quantity,
+          unitPriceCents: byId.get(line.productId)!.priceCents,
+          variant: line.variant,
         })),
       );
 
@@ -170,6 +180,7 @@ router.get("/all", requireAuth, requireBackOffice, async (req, res, next) => {
         orderId: orderItems.orderId,
         quantity: orderItems.quantity,
         unitPriceCents: orderItems.unitPriceCents,
+        variant: orderItems.variant,
         name: products.name,
       })
       .from(orderItems)
@@ -257,6 +268,7 @@ router.get("/", requireAuth, async (req: AuthedRequest, res, next) => {
         productId: orderItems.productId,
         quantity: orderItems.quantity,
         unitPriceCents: orderItems.unitPriceCents,
+        variant: orderItems.variant,
         name: products.name,
         imageUrl: products.imageUrl,
       })

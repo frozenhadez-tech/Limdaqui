@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import Link from "next/link";
+
 import { AddToCartButton } from "@/components/AddToCartButton";
 import { PriceTag } from "@/components/PriceTag";
 import { resolveImageUrl } from "@/lib/api";
@@ -102,23 +104,32 @@ export function ProductGrid({ products }: { products: Product[] }) {
               key={product.id}
               className="group overflow-hidden rounded-xl border border-gray-200 bg-white transition hover:shadow-lg"
             >
-              {product.imageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={resolveImageUrl(product.imageUrl)!}
-                  alt={product.name}
-                  className="aspect-square w-full object-cover"
-                />
-              ) : (
-                <div className="aspect-square w-full bg-gray-100" />
-              )}
+              <Link href={`/products/${product.slug}`}>
+                {product.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={resolveImageUrl(product.imageUrl)!}
+                    alt={product.name}
+                    className="aspect-square w-full object-cover"
+                  />
+                ) : (
+                  <div className="aspect-square w-full bg-gray-100" />
+                )}
+              </Link>
               <div className="p-4">
                 {product.categoryName && (
                   <p className="mb-1 text-xs font-medium uppercase tracking-wide text-gray-400">
                     {product.categoryName}
                   </p>
                 )}
-                <h2 className="font-semibold text-ink">{product.name}</h2>
+                <h2 className="font-semibold text-ink">
+                  <Link
+                    href={`/products/${product.slug}`}
+                    className="transition hover:text-brand"
+                  >
+                    {product.name}
+                  </Link>
+                </h2>
                 {product.description && (
                   <p className="mt-1 line-clamp-2 text-sm text-gray-500">
                     {product.description}
@@ -140,10 +151,21 @@ export function ProductGrid({ products }: { products: Product[] }) {
                   </span>
                 </div>
                 <div className="mt-3 flex justify-end">
-                  <AddToCartButton
-                    productId={product.id}
-                    disabled={product.stock === 0}
-                  />
+                  {(product.colors?.length ?? 0) > 0 ||
+                  (product.sizes?.length ?? 0) > 0 ? (
+                    <Link
+                      href={`/products/${product.slug}`}
+                      title="Choose color, size, and quantity"
+                      className="rounded-full bg-brand px-4 py-1.5 text-xs font-bold text-white transition-colors hover:bg-brand-600"
+                    >
+                      Select options
+                    </Link>
+                  ) : (
+                    <AddToCartButton
+                      productId={product.id}
+                      disabled={product.stock === 0}
+                    />
+                  )}
                 </div>
               </div>
             </li>

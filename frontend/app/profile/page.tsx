@@ -422,7 +422,10 @@ export default function ProfilePage() {
                           className="flex justify-between text-sm text-gray-600"
                         >
                           <span>
-                            {item.name ?? "Removed product"}{" "}
+                            {item.name ?? "Removed product"}
+                            {item.variant && (
+                              <span className="text-gray-400"> ({item.variant})</span>
+                            )}{" "}
                             <span className="text-gray-400">× {item.quantity}</span>
                           </span>
                           <span>
