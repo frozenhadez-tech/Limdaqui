@@ -33,6 +33,8 @@ type AdminOrder = {
   items: { name: string | null; quantity: number; unitPriceCents: number }[];
 };
 
+const PAGE_SIZE = 25;
+
 const STATUSES: OrderStatus[] = [
   "pending",
   "paid",
@@ -69,6 +71,7 @@ export default function AdminOrdersPage() {
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | OrderStatus>("all");
+  const [page, setPage] = useState(1);
   const [viewing, setViewing] = useState<AdminOrder | null>(null);
   const [openQuoteId, setOpenQuoteId] = useState<string | null>(null);
 
@@ -140,6 +143,23 @@ export default function AdminOrdersPage() {
       );
     });
   }, [orders, search, statusFilter]);
+
+  // A new search or filter starts back at the first page of its results.
+  useEffect(() => {
+    setPage(1);
+  }, [search, statusFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const visible = filtered.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
+
+  function goToPage(next: number) {
+    setPage(next);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   async function downloadAttachment(q: Quote) {
     setError(null);
@@ -267,7 +287,7 @@ export default function AdminOrdersPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {filtered.map((o) => (
+                {visible.map((o) => (
                   <tr key={o.id} className="transition hover:bg-gray-50">
                     <td className="px-6 py-3">
                       <button
@@ -317,6 +337,50 @@ export default function AdminOrdersPage() {
             </table>
           )}
         </div>
+
+        {filtered.length > PAGE_SIZE && (
+          <nav
+            aria-label="Order pages"
+            className="mt-6 flex flex-wrap items-center justify-center gap-2"
+          >
+            <button
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition hover:border-brand hover:text-brand disabled:opacity-40 disabled:hover:border-gray-200 disabled:hover:text-gray-600"
+            >
+              ‹ Prev
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+              <button
+                key={n}
+                onClick={() => goToPage(n)}
+                aria-current={n === currentPage ? "page" : undefined}
+                className={`h-10 w-10 rounded-full text-sm font-bold transition ${
+                  n === currentPage
+                    ? "bg-brand text-white shadow-sm shadow-brand/20"
+                    : "border border-gray-200 text-gray-600 hover:border-brand hover:text-brand"
+                }`}
+              >
+                {n}
+              </button>
+            ))}
+            <button
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition hover:border-brand hover:text-brand disabled:opacity-40 disabled:hover:border-gray-200 disabled:hover:text-gray-600"
+            >
+              Next ›
+            </button>
+          </nav>
+        )}
+
+        {filtered.length > 0 && (
+          <p className="mt-3 text-center text-xs text-gray-400">
+            Showing {(currentPage - 1) * PAGE_SIZE + 1}–
+            {Math.min(currentPage * PAGE_SIZE, filtered.length)} of{" "}
+            {filtered.length} orders
+          </p>
+        )}
       </section>
 
       {/* ---- Payment Information ---- */}
