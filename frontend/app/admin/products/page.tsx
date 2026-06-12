@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { API_URL, apiFetch, resolveImageUrl } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -9,6 +9,8 @@ import { useAuthedFetch } from "@/lib/useAuthedFetch";
 
 const field =
   "w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20";
+
+const PAGE_SIZE = 12;
 
 type FormState = {
   name: string;
@@ -86,6 +88,8 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[] | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
 
   // Editor state: null = closed, "new" = creating, otherwise product being edited.
   const [editing, setEditing] = useState<Product | "new" | null>(null);
@@ -109,6 +113,32 @@ export default function AdminProductsPage() {
   }, []);
 
   useEffect(load, [load]);
+
+  const filtered = useMemo(() => {
+    if (!products) return [];
+    const q = search.trim().toLowerCase();
+    if (!q) return products;
+    return products.filter((p) =>
+      [p.name, p.slug, p.categoryName ?? ""].join(" ").toLowerCase().includes(q),
+    );
+  }, [products, search]);
+
+  // A new search starts back at the first page of its results.
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const visible = filtered.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
+
+  function goToPage(next: number) {
+    setPage(next);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   function openEditor(target: Product | "new") {
     setEditing(target);
@@ -228,7 +258,17 @@ export default function AdminProductsPage() {
         </div>
       )}
 
-      <div className="animate-fade-up delay-2 mt-8 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+      <div className="animate-fade-up delay-2 mt-8">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className={`${field} max-w-xs`}
+          placeholder="Search by name, slug, or category…"
+          aria-label="Search products"
+        />
+      </div>
+
+      <div className="animate-fade-up delay-2 mt-4 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
         {!products ? (
           <div className="space-y-3 p-6">
             {[0, 1, 2, 3].map((i) => (
@@ -242,6 +282,10 @@ export default function AdminProductsPage() {
               Create your first product to start building the catalog.
             </p>
           </div>
+        ) : filtered.length === 0 ? (
+          <p className="p-12 text-center text-sm text-gray-400">
+            No products match your search.
+          </p>
         ) : (
           <table className="w-full text-left text-sm">
             <thead>
@@ -254,7 +298,7 @@ export default function AdminProductsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {products.map((p) => (
+              {visible.map((p) => (
                 <tr
                   key={p.id}
                   onClick={() => canEdit && openEditor(p)}
@@ -299,6 +343,50 @@ export default function AdminProductsPage() {
           </table>
         )}
       </div>
+
+      {filtered.length > PAGE_SIZE && (
+        <nav
+          aria-label="Product pages"
+          className="mt-6 flex flex-wrap items-center justify-center gap-2"
+        >
+          <button
+            onClick={() => goToPage(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition hover:border-brand hover:text-brand disabled:opacity-40 disabled:hover:border-gray-200 disabled:hover:text-gray-600"
+          >
+            ‹ Prev
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+            <button
+              key={n}
+              onClick={() => goToPage(n)}
+              aria-current={n === currentPage ? "page" : undefined}
+              className={`h-10 w-10 rounded-full text-sm font-bold transition ${
+                n === currentPage
+                  ? "bg-brand text-white shadow-sm shadow-brand/20"
+                  : "border border-gray-200 text-gray-600 hover:border-brand hover:text-brand"
+              }`}
+            >
+              {n}
+            </button>
+          ))}
+          <button
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition hover:border-brand hover:text-brand disabled:opacity-40 disabled:hover:border-gray-200 disabled:hover:text-gray-600"
+          >
+            Next ›
+          </button>
+        </nav>
+      )}
+
+      {filtered.length > 0 && (
+        <p className="mt-3 text-center text-xs text-gray-400">
+          Showing {(currentPage - 1) * PAGE_SIZE + 1}–
+          {Math.min(currentPage * PAGE_SIZE, filtered.length)} of {filtered.length}{" "}
+          products
+        </p>
+      )}
 
       {/* Slide-over editor */}
       {editing && (
