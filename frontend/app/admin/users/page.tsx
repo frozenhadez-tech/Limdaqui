@@ -9,6 +9,8 @@ import { useAuthedFetch } from "@/lib/useAuthedFetch";
 const field =
   "w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20";
 
+const PAGE_SIZE = 25;
+
 type Role = "customer" | "staff" | "manager" | "admin";
 
 type AdminUser = {
@@ -72,6 +74,7 @@ export default function AdminUsersPage() {
   const [usersList, setUsersList] = useState<AdminUser[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
 
   // Editor: null = closed, "new" = creating, otherwise the user being edited.
   const [editing, setEditing] = useState<AdminUser | "new" | null>(null);
@@ -82,8 +85,8 @@ export default function AdminUsersPage() {
 
   const load = useCallback(
     (q?: string) => {
-      const params = q?.trim() ? `?q=${encodeURIComponent(q.trim())}` : "";
-      authedFetch<AdminUser[]>(`/api/users${params}`)
+      const params = q?.trim() ? `&q=${encodeURIComponent(q.trim())}` : "";
+      authedFetch<AdminUser[]>(`/api/users?limit=100${params}`)
         .then(setUsersList)
         .catch((err) =>
           setError(err instanceof Error ? err.message : "Failed to load"),
@@ -94,11 +97,24 @@ export default function AdminUsersPage() {
 
   useEffect(() => load(), [load]);
 
-  // Debounced search.
+  // Debounced search; a new search starts back at the first page.
   useEffect(() => {
+    setPage(1);
     const t = setTimeout(() => load(search), 300);
     return () => clearTimeout(t);
   }, [search, load]);
+
+  const totalPages = Math.max(1, Math.ceil((usersList?.length ?? 0) / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const visible = (usersList ?? []).slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
+
+  function goToPage(next: number) {
+    setPage(next);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   const isSelf = editing !== "new" && editing !== null && editing.id === me?.id;
   const meIsAdmin = me?.role === "admin";
@@ -251,7 +267,7 @@ export default function AdminUsersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {usersList.map((u) => (
+              {visible.map((u) => (
                 <tr key={u.id} className="transition hover:bg-gray-50">
                   <td className="px-6 py-3">
                     <div className="flex items-center gap-3">
@@ -322,6 +338,50 @@ export default function AdminUsersPage() {
           </table>
         )}
       </div>
+
+      {(usersList?.length ?? 0) > PAGE_SIZE && (
+        <nav
+          aria-label="User pages"
+          className="mt-6 flex flex-wrap items-center justify-center gap-2"
+        >
+          <button
+            onClick={() => goToPage(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition hover:border-brand hover:text-brand disabled:opacity-40 disabled:hover:border-gray-200 disabled:hover:text-gray-600"
+          >
+            ‹ Prev
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+            <button
+              key={n}
+              onClick={() => goToPage(n)}
+              aria-current={n === currentPage ? "page" : undefined}
+              className={`h-10 w-10 rounded-full text-sm font-bold transition ${
+                n === currentPage
+                  ? "bg-brand text-white shadow-sm shadow-brand/20"
+                  : "border border-gray-200 text-gray-600 hover:border-brand hover:text-brand"
+              }`}
+            >
+              {n}
+            </button>
+          ))}
+          <button
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition hover:border-brand hover:text-brand disabled:opacity-40 disabled:hover:border-gray-200 disabled:hover:text-gray-600"
+          >
+            Next ›
+          </button>
+        </nav>
+      )}
+
+      {(usersList?.length ?? 0) > 0 && (
+        <p className="mt-3 text-center text-xs text-gray-400">
+          Showing {(currentPage - 1) * PAGE_SIZE + 1}–
+          {Math.min(currentPage * PAGE_SIZE, usersList!.length)} of{" "}
+          {usersList!.length} users
+        </p>
+      )}
 
       {/* Slide-over editor */}
       {editing && (
