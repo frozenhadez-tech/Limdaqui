@@ -110,9 +110,11 @@ export function Header() {
   const items: NavItem[] = [
     { href: "/", label: "Home", icon: "home", title: "Go to the homepage" },
     { href: "/products", label: "Shop", icon: "shop", title: "Browse the product catalog" },
-    { href: "/cart", label: "Cart", icon: "cart", title: "View your shopping cart" },
     ...(user
-      ? [{ href: "/profile", label: "My Profile", icon: "profile" as const, title: "Account, security, and order history" }]
+      ? [
+          { href: "/cart", label: "Cart", icon: "cart" as const, title: "View your shopping cart" },
+          { href: "/profile", label: "My Profile", icon: "profile" as const, title: "Account, security, and order history" },
+        ]
       : []),
     ...(isAdmin
       ? [{ href: "/admin", label: "Admin", icon: "admin" as const, title: "Back-office dashboard" }]

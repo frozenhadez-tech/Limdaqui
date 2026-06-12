@@ -122,6 +122,43 @@ export default function CartPage() {
     }
   }
 
+  if (authLoading) {
+    return (
+      <main className="flex min-h-[calc(100vh-5rem)] items-center justify-center bg-gray-50">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-gray-200 border-t-brand" />
+      </main>
+    );
+  }
+
+  if (!user) {
+    return (
+      <main className="flex min-h-[calc(100vh-5rem)] items-center justify-center bg-gray-50 px-6">
+        <div className="w-full max-w-md rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-sm">
+          <h1 className="font-display text-xl font-extrabold tracking-tight text-ink">
+            Sign in required
+          </h1>
+          <p className="mt-2 text-sm text-gray-500">
+            Log in to view your cart, see prices, and check out.
+          </p>
+          <div className="mt-6 flex justify-center gap-3">
+            <Link
+              href="/login"
+              className="rounded-full bg-brand px-6 py-2.5 text-sm font-bold text-white transition hover:bg-brand-600"
+            >
+              Go to login
+            </Link>
+            <Link
+              href="/register"
+              className="rounded-full border border-gray-200 px-6 py-2.5 text-sm font-semibold text-gray-700 transition hover:border-brand hover:text-brand"
+            >
+              Create an account
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   if (placedOrderId) {
     return (
       <main className="flex min-h-[calc(100vh-5rem)] items-center justify-center bg-gray-50 px-6 py-16">
@@ -219,7 +256,7 @@ export default function CartPage() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold text-ink">{r.name}</p>
                     <p className="text-sm text-gray-500">
-                      {user ? formatPrice(r.priceCents, r.currency) : "Price hidden"}
+                      {formatPrice(r.priceCents, r.currency)}
                       {r.quantity > r.stock && (
                         <span className="ml-2 text-xs font-semibold text-amber-600">
                           Only {r.stock} in stock
@@ -250,7 +287,7 @@ export default function CartPage() {
                     </button>
                   </div>
                   <p className="w-24 text-right font-bold text-ink">
-                    {user ? formatPrice(r.priceCents * r.quantity, r.currency) : "—"}
+                    {formatPrice(r.priceCents * r.quantity, r.currency)}
                   </p>
                   <button
                     onClick={() => remove(r.id)}
@@ -276,22 +313,16 @@ export default function CartPage() {
               <h2 className="font-display text-base font-extrabold tracking-tight text-ink">
                 Summary
               </h2>
-              {user ? (
-                <dl className="mt-4 space-y-2 text-sm">
-                  {totalsByCurrency.map(([currency, cents]) => (
-                    <div key={currency} className="flex justify-between">
-                      <dt className="text-gray-500">Total ({currency})</dt>
-                      <dd className="font-bold text-ink">
-                        {formatPrice(cents, currency)}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-              ) : (
-                <p className="mt-4 text-sm text-gray-500">
-                  Prices and totals are visible to registered customers.
-                </p>
-              )}
+              <dl className="mt-4 space-y-2 text-sm">
+                {totalsByCurrency.map(([currency, cents]) => (
+                  <div key={currency} className="flex justify-between">
+                    <dt className="text-gray-500">Total ({currency})</dt>
+                    <dd className="font-bold text-ink">
+                      {formatPrice(cents, currency)}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
 
               {mixedCurrencies && (
                 <p className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
@@ -300,8 +331,7 @@ export default function CartPage() {
                 </p>
               )}
 
-              {authLoading ? null : user ? (
-                <>
+              <>
                   <div className="mt-5 border-t border-gray-100 pt-4">
                     <p className="text-sm font-semibold text-ink">Payment method</p>
                     <div className="mt-2 space-y-2">
@@ -433,20 +463,7 @@ export default function CartPage() {
                   >
                     {placing ? "Placing order…" : "Place order"}
                   </button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    href="/login"
-                    className="mt-5 block w-full rounded-full bg-brand py-2.5 text-center text-sm font-bold text-white transition hover:bg-brand-600"
-                  >
-                    Log in to checkout
-                  </Link>
-                  <p className="mt-2 text-center text-xs text-gray-400">
-                    Your cart is saved on this device.
-                  </p>
-                </>
-              )}
+              </>
             </aside>
           </div>
         )}
